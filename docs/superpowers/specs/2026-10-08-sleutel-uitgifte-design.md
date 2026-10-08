@@ -20,11 +20,16 @@ Mobiele web-app (iPhone in beheer van facilitair) waarmee een ontvanger tekent v
 | Gebouwen/voorwaarden | In `config.js`; wijziging = nieuwe voorwaardenversie + redeploy |
 
 ## Bestanden
-- `index.html` — alle schermen als `<section data-screen="…">`, één zichtbaar; CSS inline in `<style>`.
-- `app.js` — state, navigatie, validatie, handtekening, PDF, delen, opslag.
-- `config.js` — `BUILDINGS`, `TERMS_VERSION` (`2026.1`), `TERMS` (8 artikelen uit prototype `terms()`), `DEFAULTS`.
+- `index.html` — alle schermen als `<section data-screen="…">`, één zichtbaar.
+- `style.css` — tokens en componentstijlen.
+- `config.js` — `BUILDINGS`, `TERMS_VERSION` (`2026.1`), `terms(org)` (8 artikelen uit prototype `terms()`), `DEFAULTS`.
+- `logic.js` — pure functies (validatie, metadata, onderwerp/body, opschoning). Geen DOM.
+- `store.js` — localStorage + IndexedDB.
+- `sign.js` — handtekening-canvas.
+- `pdf.js` — PDF-opbouw (jsPDF) en delen.
+- `app.js` — state, navigatie, render, events.
 - `manifest.webmanifest` + `icon.png` (180×180) — beginscherm.
-- `test.html` — assert-checks op pure logica.
+- `test.mjs` — `node test.mjs`, assert-checks op `logic.js` en `config.js`.
 
 ## Schermen
 Volgen het ontwerp pixelgetrouw (tokens, maten, kleuren uit de README). Viewport-referentie 390×844; op brede schermen gecentreerd, max-breedte 480px. Safe-area-insets via `env(safe-area-inset-*)` in plaats van de nep-statusbalk.
@@ -78,7 +83,7 @@ Let op: stap 2 en 3 moeten in dezelfde user-gesture blijven; PDF-generatie is sy
 Bij app-start: recent-items en PDF's met `when` ouder dan 30 dagen verwijderen.
 
 ## Testen
-- `test.html` + `assert`-checks: `errors()` per stap, `docNo`/bestandsnaam, onderwerp, opschoning (`prune(recent, now)`), initialen.
+- `node test.mjs` met `assert`-checks: `errors()` per stap, `docNo`/bestandsnaam, onderwerp, opschoning (`prune(recent, now)`), initialen.
 - Visueel in browser (390×844) tegen ontwerp-screenshots.
 - Op iPhone: deelmenu → Outlook (bijlage aanwezig; nagaan of onderwerp/body meekomen).
 
