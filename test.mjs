@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { stepsFor, copy, mailTo, emptyIssue, errors, itemList, meta, subject, mailBody, recentItems, formatWhen, prune, initials, settingsErrors } from './logic.js';
+import { stepsFor, copy, mailTo, keysFor, emptyIssue, errors, itemList, meta, subject, mailBody, recentItems, formatWhen, prune, initials, settingsErrors } from './logic.js';
 import { terms, TERMS_VERSION, BUILDINGS, DEFAULTS } from './config.js';
 
 const now = new Date(2026, 9, 8, 9, 5);
@@ -9,7 +9,7 @@ assert.deepEqual(stepsFor('out'), ['recipient', 'items', 'terms', 'sign', 'previ
 assert.deepEqual(stepsFor('in'), ['recipient', 'items', 'sign', 'preview']);
 assert.equal(s.mode, 'out');
 assert.equal(emptyIssue(now, 'in').mode, 'in');
-assert.deepEqual(s.keys, [{ building: null, keyNo: '' }]);
+assert.deepEqual(s.keys, [{ building: null, keyNo: '', other: false }]);
 assert.equal(s.keyOn, true);
 assert.equal(s.tagOn, false);
 assert.equal(s.now, now);
@@ -57,6 +57,11 @@ assert.equal(subject({ ...two, mode: 'in', tagOn: true }), 'Innamebewijs toegang
 assert.equal(recentItems(two), 'Sleutel Gebouw B – Logistiek · Sleutel Parkeergarage');
 assert.equal(recentItems({ ...two, mode: 'in' }), 'Inname · Sleutel Gebouw B – Logistiek · Sleutel Parkeergarage');
 assert.equal(itemList({ ...full, keyOn: false }).length, 1);
+// vaste sleutels per gebouw uit config.js
+assert.deepEqual(keysFor('B').map((x) => x.no), ['K-2001', 'K-2002']);
+assert.deepEqual(keysFor('P'), []);
+assert.deepEqual(keysFor(null), []);
+assert.deepEqual(itemList({ ...s, keys: [k('B', 'K-2001')] }), [{ label: 'Toegangssleutel', detail: 'Gebouw B – Logistiek · K-2001 (Magazijn)' }]);
 assert.equal(subject(full), 'Ontvangstbewijs toegangssleutel en alarmtag – Sanne de Vries');
 assert.equal(subject({ ...full, tagOn: false }), 'Ontvangstbewijs toegangssleutel – Sanne de Vries');
 assert.equal(recentItems(full), 'Sleutel Gebouw B – Logistiek · Tag 0417');

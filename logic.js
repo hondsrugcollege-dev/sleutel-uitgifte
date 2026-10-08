@@ -25,10 +25,12 @@ export const isEmail = (v) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(v).trim()
 // Ontvangers voor het klembord: beheer + (optioneel) de ontvanger/inleveraar zelf.
 export const mailTo = (beheer, s) => [beheer, s.mail.trim()].filter(Boolean).join(', ');
 
+export const keysFor = (buildingId) => BUILDINGS.find((b) => b.id === buildingId)?.keys || [];
+
 const pad = (n) => String(n).padStart(2, '0');
 
 export function emptyIssue(now = new Date(), mode = 'out') {
-  return { mode, name: '', dept: '', mail: '', keyOn: true, keys: [{ building: null, keyNo: '' }], tagOn: false, tagNo: '', termsRead: false, agreed: false, sig: null, touched: false, now };
+  return { mode, name: '', dept: '', mail: '', keyOn: true, keys: [{ building: null, keyNo: '', other: false }], tagOn: false, tagNo: '', termsRead: false, agreed: false, sig: null, touched: false, now };
 }
 
 export function itemList(s) {
@@ -36,7 +38,8 @@ export function itemList(s) {
   if (s.keyOn) {
     for (const k of s.keys) {
       const b = BUILDINGS.find((x) => x.id === k.building);
-      out.push({ label: 'Toegangssleutel', detail: `${b ? b.name : '—'} · ${k.keyNo || '—'}` });
+      const known = keysFor(k.building).find((x) => x.no === k.keyNo);
+      out.push({ label: 'Toegangssleutel', detail: `${b ? b.name : '—'} · ${k.keyNo || '—'}${known ? ` (${known.label})` : ''}` });
     }
   }
   if (s.tagOn) out.push({ label: 'Alarmtag', detail: `Tag ${s.tagNo || '—'}` });

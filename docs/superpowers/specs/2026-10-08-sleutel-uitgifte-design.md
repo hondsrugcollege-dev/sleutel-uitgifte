@@ -109,3 +109,9 @@ Bron: map `HC Logo/` (logo's + PowerPoint-template). Afgeleide bestanden in `bra
 - Optioneel veld op stap 1 ("E-mail ontvanger" / "E-mail inleveraar"); ingevuld moet het een geldig adres zijn.
 - Klembord bij verzenden: `beheeradres, ontvangeradres` (`mailTo()` in `logic.js`); ook getoond op PDF-controle en Verzonden, en bewaard bij het recent-item voor opnieuw delen.
 - Mail heeft geen aanhef meer, zodat dezelfde tekst naar beheer én ontvanger kan.
+
+## Vaste sleutels per gebouw (2026-10-08)
+- `config.js`: `BUILDINGS[].keys = [{ no, label }]` (optioneel). Meer sleutels per gebouw = extra regel in `keys`.
+- Sleutelrij: gebouw kiezen → sleutel kiezen uit die lijst, of "Ander nummer…" om te typen. Gebouw zonder `keys` → typveld zoals voorheen.
+- Rijstate `{ building, keyNo, other }`. PDF/samenvatting tonen de omschrijving: "Gebouw B – Logistiek · K-2001 (Magazijn)".
+- De sleutels in config zijn voorbeelddata; vervangen door de echte lijst.

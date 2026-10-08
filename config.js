@@ -1,10 +1,34 @@
 // Wijzig je de voorwaarden? Verhoog dan TERMS_VERSION; die gaat mee in de PDF.
 export const TERMS_VERSION = '2026.1';
 
+// Gebouwen met (optioneel) hun vaste sleutels.
+// - id: korte, unieke code (wordt intern gebruikt; niet wijzigen als er al uitgiftes mee zijn gedaan)
+// - keys: de sleutels die je in de app kunt kiezen. `no` = sleutelnummer, `label` = omschrijving.
+//   Meer sleutels voor één gebouw? Voeg gewoon een regel toe aan `keys`.
+//   Geen `keys` (zoals Parkeergarage)? Dan typ je het sleutelnummer in de app zelf in.
+// In de app staat bij elk gebouw met sleutels ook "Ander nummer…" om toch een nummer te typen.
 export const BUILDINGS = [
-  { id: 'A', name: 'Hoofdgebouw A', addr: 'Stationsplein 1' },
-  { id: 'B', name: 'Gebouw B – Logistiek', addr: 'Havenweg 14' },
-  { id: 'C', name: 'Gebouw C – Kantoren', addr: 'Stationsplein 3' },
+  {
+    id: 'A', name: 'Hoofdgebouw A', addr: 'Stationsplein 1',
+    keys: [
+      { no: 'K-1001', label: 'Hoofdingang' },
+      { no: 'K-1002', label: 'Personeelsingang' },
+      { no: 'K-1010', label: 'Technische ruimte' },
+    ],
+  },
+  {
+    id: 'B', name: 'Gebouw B – Logistiek', addr: 'Havenweg 14',
+    keys: [
+      { no: 'K-2001', label: 'Magazijn' },
+      { no: 'K-2002', label: 'Laaddeur' },
+    ],
+  },
+  {
+    id: 'C', name: 'Gebouw C – Kantoren', addr: 'Stationsplein 3',
+    keys: [
+      { no: 'K-3001', label: 'Kantoren 1e verdieping' },
+    ],
+  },
   { id: 'P', name: 'Parkeergarage', addr: 'Ingang Havenweg' },
 ];
 

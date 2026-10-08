@@ -1,5 +1,5 @@
 import { BUILDINGS, TERMS_VERSION, terms } from './config.js';
-import { stepsFor, copy, mailTo, isEmail, emptyIssue, errors, itemList, meta, subject, mailBody, recentItems, formatWhen, prune, initials, settingsErrors } from './logic.js';
+import { stepsFor, copy, mailTo, isEmail, keysFor, emptyIssue, errors, itemList, meta, subject, mailBody, recentItems, formatWhen, prune, initials, settingsErrors } from './logic.js';
 import { loadSettings, saveSettings, loadRecent, saveRecent, putPdf, getPdf, delPdf } from './store.js';
 import { createSignature } from './sign.js';
 import { buildPdf, shareFile } from './pdf.js';
@@ -30,13 +30,21 @@ const seqKey = (mode) => (mode === 'in' ? 'nextSeqIn' : 'nextSeq');
 const curMeta = () => meta(s.name, s.now, settings[seqKey(s.mode)], s.mode);
 
 // Alleen bij toevoegen/verwijderen/start opnieuw opbouwen, zodat de focus bij typen blijft.
+const OTHER = '__other';
+
 function renderKeys() {
   const opts = BUILDINGS.map((b) => `<option value="${esc(b.id)}">${esc(b.name)}</option>`).join('');
-  $('#keys').innerHTML = s.keys.map((k, i) => `<div class="krow">
+  $('#keys').innerHTML = s.keys.map((k, i) => {
+    const list = keysFor(k.building);
+    const pick = list.length ? `<select data-key="${i}" data-kfield="keyPick" aria-label="Sleutel ${i + 1}"><option value="">Kies sleutel</option>${
+      list.map((x) => `<option value="${esc(x.no)}">${esc(x.no)} · ${esc(x.label)}</option>`).join('')}<option value="${OTHER}">Ander nummer…</option></select>` : '';
+    const typed = !list.length || k.other ? `<input class="code" data-key="${i}" data-kfield="keyNo" placeholder="Sleutelnummer, bijv. K-1042" autocomplete="off" autocapitalize="characters" aria-label="Sleutelnummer ${i + 1}">` : '';
+    return `<div class="krow">
     <div class="khead"><span class="flabel">Sleutel ${i + 1}</span>${s.keys.length > 1 ? `<button class="textbtn" data-act="removeKey" data-i="${i}">Verwijderen</button>` : ''}</div>
     <select data-key="${i}" data-kfield="building" aria-label="Gebouw sleutel ${i + 1}"><option value="">Kies gebouw</option>${opts}</select>
-    <input class="code" data-key="${i}" data-kfield="keyNo" placeholder="Sleutelnummer, bijv. K-1042" autocomplete="off" autocapitalize="characters" aria-label="Sleutelnummer ${i + 1}">
-  </div>`).join('');
+    ${pick}${typed}
+  </div>`;
+  }).join('');
 }
 
 function renderStatic() {
@@ -92,9 +100,12 @@ function render() {
   showIf('#e-items', t && !s.keyOn && !s.tagOn);
   let keysBad = false;
   $$('[data-key]').forEach((el) => {
-    const v = s.keys[el.dataset.key]?.[el.dataset.kfield] || '';
+    const row = s.keys[el.dataset.key], f = el.dataset.kfield;
+    if (!row) return;
+    const v = (f === 'keyPick' ? (row.other ? OTHER : row.keyNo) : row[f]) || '';
     if (el.value !== v) el.value = v;
-    const bad = t && s.keyOn && !v.trim();
+    // Bij "Ander nummer…" krijgt alleen het typveld de rode rand.
+    const bad = t && s.keyOn && (f === 'building' ? !row.building : !(f === 'keyPick' && row.other) && !row.keyNo.trim());
     keysBad ||= bad;
     el.classList.toggle('err', bad);
     if (el.tagName === 'SELECT') el.classList.toggle('empty', !v);
@@ -242,7 +253,7 @@ const actions = {
   settings: () => { draft = { org: settings.org, email: settings.email, nextSeq: String(settings.nextSeq), nextSeqIn: String(settings.nextSeqIn) }; go('settings'); },
   toggleKey: () => { s.keyOn = !s.keyOn; render(); },
   toggleTag: () => { s.tagOn = !s.tagOn; render(); },
-  addKey: () => { s.keys.push({ building: '', keyNo: '' }); renderKeys(); render(); },
+  addKey: () => { s.keys.push({ building: '', keyNo: '', other: false }); renderKeys(); render(); },
   removeKey: (el) => { s.keys.splice(Number(el.dataset.i), 1); renderKeys(); render(); },
   agree: () => { if (s.termsRead || !settings.requireScroll) { s.agreed = !s.agreed; render(); } },
   clearSig: () => sig.clear(),
@@ -260,7 +271,15 @@ document.addEventListener('input', (ev) => {
   const f = ev.target.dataset.field;
   if (f) { s[f] = ev.target.value; return render(); }
   const kf = ev.target.dataset.kfield;
-  if (kf) { s.keys[ev.target.dataset.key][kf] = ev.target.value; return render(); }
+  if (kf) {
+    const row = s.keys[ev.target.dataset.key], v = ev.target.value;
+    if (kf === 'keyNo') { row.keyNo = v; return render(); }
+    if (kf === 'building') Object.assign(row, { building: v, keyNo: '', other: false });
+    if (kf === 'keyPick') Object.assign(row, { other: v === OTHER, keyNo: v === OTHER ? '' : v });
+    renderKeys(); // andere sleutellijst of typveld tonen/verbergen
+    render();
+    if (row.other && kf === 'keyPick') $(`input[data-key="${ev.target.dataset.key}"]`)?.focus();
+  }
   const k = ev.target.dataset.setting;
   if (k && draft) {
     draft[k] = ev.target.value;
