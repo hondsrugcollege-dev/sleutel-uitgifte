@@ -61,7 +61,7 @@ h2.big{font-size:32px;line-height:1.1}
 .plus{width:44px;height:44px;border-radius:50%;background:#fff;color:var(--ink);display:flex;align-items:center;justify-content:center;flex:none}
 .card{background:var(--surface);border:1px solid var(--line-card);border-radius:16px}
 .mailcard{padding:14px 16px;display:flex;justify-content:space-between;align-items:center;gap:12px}
-.link{font-size:14px;font-weight:600;color:var(--ok);padding:12px 0;flex:none}
+.link{font-size:14px;font-weight:600;color:var(--ok);padding:12px 0;flex:none;min-height:44px;min-width:44px;display:flex;align-items:center;justify-content:center}
 .list{overflow:hidden}
 .rrow{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:14px 16px;width:100%}
 .rrow+.rrow{border-top:1px solid var(--divider)}
@@ -77,7 +77,7 @@ h2.big{font-size:32px;line-height:1.1}
 .iconbtn{width:44px;height:44px;display:flex;align-items:center;justify-content:center;border-radius:50%;flex:none}
 .iconbtn:hover,.iconbtn:active{background:var(--press)}
 .stepno{font:500 12px var(--mono);letter-spacing:.06em;color:var(--muted)}
-.textbtn{font-size:15px;color:var(--muted);padding:10px 6px}
+.textbtn{font-size:15px;color:var(--muted);padding:10px 6px;min-height:44px;display:flex;align-items:center}
 .progress{display:flex;gap:4px;padding:0 6px}
 .progress i{flex:1;height:4px;border-radius:2px;background:var(--prog-off);transition:background .3s}
 .progress i.on{background:var(--ink)}
@@ -138,9 +138,9 @@ h2.big{font-size:32px;line-height:1.1}
 .sigline{position:absolute;left:20px;right:20px;bottom:46px;border-bottom:1.5px dashed var(--sigline);pointer-events:none}
 .sigx{position:absolute;left:20px;bottom:50px;font-size:22px;color:var(--sigline);pointer-events:none}
 .sigph{position:absolute;inset:0 0 60px;display:flex;align-items:center;justify-content:center;color:var(--ph);font-size:15px;pointer-events:none}
-.sigfoot{position:absolute;left:20px;right:12px;bottom:8px;display:flex;justify-content:space-between;align-items:center;pointer-events:none}
+.sigfoot{position:absolute;left:20px;right:12px;bottom:0;display:flex;justify-content:space-between;align-items:center;pointer-events:none}
 .sigfoot>span{font-size:13px;color:var(--muted)}
-.sigfoot button{pointer-events:auto;font-size:14px;font-weight:600;padding:8px 10px;border-radius:8px}
+.sigfoot button{pointer-events:auto;font-size:14px;font-weight:600;padding:8px 10px;border-radius:8px;min-height:44px;min-width:44px;display:flex;align-items:center;justify-content:center}
 .sigfoot button:hover{background:var(--tile)}
 
 /* PDF-controle */
