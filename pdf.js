@@ -2,7 +2,7 @@ import { TERMS_VERSION, terms } from './config.js';
 import { itemList } from './logic.js';
 
 export function buildPdf(s, m, org) {
-  const doc = new window.jspdf.jsPDF({ unit: 'mm', format: 'a4' });
+  const doc = new window.jspdf.jsPDF({ unit: 'mm', format: 'a4', compress: true });
   let y = 22;
   doc.setFont('helvetica', 'bold'); doc.setFontSize(20); doc.text('Ontvangstbewijs', 20, y);
   doc.setFont('helvetica', 'normal'); doc.setFontSize(9); doc.text(`${m.docNo}   ${m.dateShort} ${m.timeShort}`, 190, y, { align: 'right' });
