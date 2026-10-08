@@ -44,6 +44,7 @@ assert.equal(m.fileName, 'Ontvangstbewijs_José_de_Vries_2026-10-08.pdf');
 assert.equal(m.dateShort, '08-10-2026');
 assert.equal(m.timeShort, '09:05');
 assert.equal(m.dateLong, 'donderdag 8 oktober 2026');
+assert.equal(meta('Jose\u0301', now, 1).fileName, 'Ontvangstbewijs_Jos\u00e9_2026-10-08.pdf');
 assert.equal(meta('', now, 1).fileName, 'Ontvangstbewijs_Ontvanger_2026-10-08.pdf');
 assert.equal(meta('a/b', now, 12345).docNo, 'UIT-2026-12345');
 assert.equal(meta('a/b', now, 1).fileName, 'Ontvangstbewijs_ab_2026-10-08.pdf');
@@ -70,6 +71,7 @@ const p = prune(rec, now);
 assert.deepEqual(p.keep.map((r) => r.id), ['a']);
 assert.deepEqual(p.drop, ['b']);
 assert.deepEqual(prune([], now), { keep: [], drop: [] });
+assert.deepEqual(prune([{ id: 'x', when: 'kapot' }, { id: 'y' }], now), { keep: [{ id: 'x', when: 'kapot' }, { id: 'y' }], drop: [] });
 
 // initials
 assert.equal(initials('Facilitaire Dienst'), 'FD');

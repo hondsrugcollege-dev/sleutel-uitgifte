@@ -31,7 +31,7 @@ export function errors(s) {
 export function meta(name, now, seq) {
   const d = now;
   const iso = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
-  const slug = (name || 'Ontvanger').trim().replace(/\s+/g, '_').replace(/[^\p{L}\p{N}_-]/gu, '');
+  const slug = (name || 'Ontvanger').normalize('NFC').trim().replace(/\s+/g, '_').replace(/[^\p{L}\p{N}_-]/gu, '');
   return {
     dateShort: `${pad(d.getDate())}-${pad(d.getMonth() + 1)}-${d.getFullYear()}`,
     timeShort: `${pad(d.getHours())}:${pad(d.getMinutes())}`,
@@ -61,7 +61,7 @@ export function formatWhen(iso, now = new Date()) {
 
 export function prune(recent, now = new Date(), days = 30) {
   const cutoff = now.getTime() - days * 864e5;
-  const fresh = (r) => new Date(r.when).getTime() >= cutoff;
+  const fresh = (r) => !(new Date(r.when).getTime() < cutoff); // onleesbare datum (NaN) → bewaren
   return { keep: recent.filter(fresh), drop: recent.filter((r) => !fresh(r)).map((r) => r.id) };
 }
 

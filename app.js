@@ -206,6 +206,7 @@ async function resend(id) {
     await shareFile(new File([buf], r.fileName, { type: 'application/pdf' }), `Ontvangstbewijs ${r.docNo}`);
   } catch (err) {
     if (err.name === 'NotAllowedError') toast('Tik nogmaals om te delen');
+    else if (err.name !== 'AbortError') toast('Delen mislukt. Probeer het opnieuw.');
   }
 }
 

@@ -56,6 +56,6 @@ export async function shareFile(file, title, text) {
   a.href = URL.createObjectURL(file);
   a.download = file.name;
   a.click();
-  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  setTimeout(() => URL.revokeObjectURL(a.href), 60000);
   return 'downloaded';
 }
