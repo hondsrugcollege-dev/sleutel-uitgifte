@@ -89,3 +89,10 @@ Bij app-start: recent-items en PDF's met `when` ouder dan 30 dagen verwijderen.
 
 ## Buiten scope
 Backend, offline, pincode, meerdere toestellen met gedeelde teller, beheer van gebouwen/voorwaarden in de app.
+
+## Huisstijl Hondsrug College (2026-10-08, goedgekeurd via voorbeeld)
+Bron: map `HC Logo/` (logo's + PowerPoint-template). Afgeleide bestanden in `brand/`.
+- Kleuren uit logo: cyaan `#00B0C4`, oranje `#FF7D00`, groen `#227B56` (vervangt accent `#1E6B4A`, tint `#E2F0EA`), donkergroen `#225000`.
+- App: breed logo linksboven op Start (vervangt organisatienaam); voortgangsbalk cyaan; plus-knop oranje; golf uit template onderaan Start en Verzonden. Knoppen blijven donker (contrast).
+- PDF: logo linksboven (45 mm breed), golf uit template als watermerk over volle breedte onderaan, 35% dekking (voorgemengd in `brand/wave-pdf.jpg`).
+- App-icoon: H-teken (hoog logo zonder slogan) op wit.

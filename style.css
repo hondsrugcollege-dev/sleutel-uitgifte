@@ -2,7 +2,7 @@
   --ink:#15171A;--muted:#5E636B;--body:#3A3E45;--ph:#9A9EA5;
   --bg:#F6F5F2;--press:#ECEAE5;--tile:#F1EFEA;--surface:#fff;
   --line-card:#E2DFD8;--line-input:#D6D2CA;--divider:#ECEAE5;--sigline:#C9C5BC;--radio-off:#B8B4AB;--prog-off:#D9D5CD;
-  --ok:#1E6B4A;--ok-tint:#E3EFE8;--err:#B3261E;--err-tint:#FBEAE8;
+  --ok:#227B56;--ok-tint:#E2F0EA;--hc-cyan:#00B0C4;--hc-orange:#FF7D00;--err:#B3261E;--err-tint:#FBEAE8;
   --mono:'Geist Mono',ui-monospace,monospace;
 }
 *{box-sizing:border-box}
@@ -32,10 +32,10 @@ input.code{height:50px;border-radius:12px;padding:0 14px;font:500 16px var(--mon
 
 /* schermen */
 .screen{flex:1;min-height:0;overflow-y:auto;padding:10px 22px 24px;display:flex;flex-direction:column;gap:24px}
-.home{padding-top:12px;gap:26px}
+.home{padding-top:12px;padding-bottom:96px;gap:26px}
 .screen.terms{overflow:hidden;gap:14px;padding-bottom:16px}
 .screen.preview{background:var(--press);padding:10px 16px 24px;gap:14px}
-.screen.done{padding:24px 26px;justify-content:center;gap:28px}
+.screen.done{position:relative;padding:24px 26px 96px;justify-content:center;gap:28px}
 
 /* gaps (na .screen zodat ze winnen) */
 .g1{gap:1px}.g2{gap:2px}.g3{gap:3px}.g4{gap:4px}.g6{gap:6px}.g8{gap:8px}.g10{gap:10px}.g14{gap:14px}.g16{gap:16px}.g18{gap:18px}
@@ -53,13 +53,15 @@ h2.big{font-size:32px;line-height:1.1}
 .mono12{font:500 12px var(--mono);color:var(--muted)}
 
 /* start */
+.logo{height:30px;display:block}
+.wave{position:absolute;left:0;right:0;bottom:0;height:72px;background:url(brand/wave.jpg) center bottom/auto 100% no-repeat;pointer-events:none}
 .avatar{width:44px;height:44px;margin:-4px -4px -4px 0;display:flex;align-items:center;justify-content:center}
 .avatar span{width:36px;height:36px;border-radius:50%;background:var(--ink);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:13px}
 .hero{background:var(--ink);color:#fff;border-radius:20px;padding:22px;display:flex;justify-content:space-between;align-items:center}
 .hero:active,.btn:active{transform:scale(.98)}
 .hero-t{font-size:19px;font-weight:600}
 .hero-s{font-size:13px;color:#B9BCC2}
-.plus{width:44px;height:44px;border-radius:50%;background:#fff;color:var(--ink);display:flex;align-items:center;justify-content:center;flex:none}
+.plus{width:44px;height:44px;border-radius:50%;background:var(--hc-orange);color:#fff;display:flex;align-items:center;justify-content:center;flex:none}
 .card{background:var(--surface);border:1px solid var(--line-card);border-radius:16px}
 .mailcard{padding:14px 16px;display:flex;justify-content:space-between;align-items:center;gap:12px}
 .link{font-size:14px;font-weight:600;color:var(--ok);padding:12px 0;flex:none;min-height:44px;min-width:44px;display:flex;align-items:center;justify-content:center}
@@ -81,7 +83,7 @@ h2.big{font-size:32px;line-height:1.1}
 .textbtn{font-size:15px;color:var(--muted);padding:10px 6px;min-height:44px;display:flex;align-items:center}
 .progress{display:flex;gap:4px;padding:0 6px}
 .progress i{flex:1;height:4px;border-radius:2px;background:var(--prog-off);transition:background .3s}
-.progress i.on{background:var(--ink)}
+.progress i.on{background:var(--hc-cyan)}
 
 /* formulier */
 .field{display:flex;flex-direction:column;gap:8px}
@@ -149,7 +151,9 @@ h2.big{font-size:32px;line-height:1.1}
 .pvhead{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;padding:0 6px}
 .roundbtn{width:44px;height:44px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;flex:none}
 .roundbtn:hover{background:var(--bg)}
-.page{background:#fff;border-radius:4px;box-shadow:0 8px 24px -8px rgba(0,0,0,.2);aspect-ratio:1/1.414;padding:22px 20px;display:flex;flex-direction:column;gap:12px;font-size:8px;line-height:1.45;flex:none;overflow:hidden}
+.page{background:#fff;border-radius:4px;box-shadow:0 8px 24px -8px rgba(0,0,0,.2);aspect-ratio:1/1.414;padding:22px 20px;display:flex;flex-direction:column;gap:12px;font-size:8px;line-height:1.45;flex:none;overflow:hidden;position:relative;padding-bottom:52px}
+.pg-logo{height:21px;display:block}
+.pg-wave{position:absolute;left:0;right:0;bottom:0;aspect-ratio:1500/164;background:url(brand/wave-pdf.jpg) center/100% 100%}
 .pg-head{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:1.5px solid var(--ink);padding-bottom:8px}
 .pg-title{font-size:12.5px;font-weight:700;letter-spacing:-.01em}
 .pg-sub{font-size:7.5px;color:var(--muted)}

@@ -1,13 +1,26 @@
 import { TERMS_VERSION, terms } from './config.js';
 import { itemList } from './logic.js';
 
+// buildPdf moet synchroon blijven (iOS user activation), dus beelden vooraf laden.
+const preload = (src) => Object.assign(new Image(), { src });
+const LOGO = preload('brand/logo.png');
+const WAVE = preload('brand/wave-pdf.jpg'); // golf uit HC-template, 35% op wit voorgemengd
+const ready = (img) => img.complete && img.naturalWidth > 0;
+
 export function buildPdf(s, m, org) {
   const doc = new window.jspdf.jsPDF({ unit: 'mm', format: 'a4', compress: true });
-  let y = 22;
+  if (ready(WAVE)) {
+    const h = 210 * WAVE.naturalHeight / WAVE.naturalWidth;
+    doc.addImage(WAVE, 'JPEG', 0, 297 - h, 210, h);
+  }
+  if (ready(LOGO)) doc.addImage(LOGO, 'PNG', 20, 14, 45, 45 * LOGO.naturalHeight / LOGO.naturalWidth);
+  doc.setFont('helvetica', 'normal'); doc.setFontSize(9); doc.text(`${m.docNo}   ${m.dateShort} ${m.timeShort}`, 190, 21, { align: 'right' });
+  doc.setLineWidth(0.5); doc.line(20, 31, 190, 31);
+  let y = 42;
   doc.setFont('helvetica', 'bold'); doc.setFontSize(20); doc.text('Ontvangstbewijs', 20, y);
-  doc.setFont('helvetica', 'normal'); doc.setFontSize(9); doc.text(`${m.docNo}   ${m.dateShort} ${m.timeShort}`, 190, y, { align: 'right' });
+  doc.setFont('helvetica', 'normal'); doc.setFontSize(9);
   y += 6; doc.setTextColor(90); doc.text(`Sleutels & alarmtags · ${org}`, 20, y); doc.setTextColor(0);
-  y += 4; doc.setLineWidth(0.5); doc.line(20, y, 190, y); y += 10;
+  y += 10;
 
   doc.setFontSize(10);
   [['Ontvanger', s.name], ['Afdeling', s.dept || '—'], ['Uitgegeven', m.dateLong]].forEach(([k, v]) => {

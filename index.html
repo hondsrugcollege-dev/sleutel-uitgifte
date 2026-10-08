@@ -22,7 +22,7 @@
 
 <section class="screen home" data-screen="home">
   <div class="row between">
-    <span class="eyebrow" data-text="org"></span>
+    <img class="logo" src="brand/logo.png" alt="Hondsrug College">
     <button class="avatar" data-act="settings" aria-label="Instellingen"><span data-text="initials"></span></button>
   </div>
   <div class="col g8">
@@ -41,6 +41,7 @@
     <div class="eyebrow">Recent verzonden</div>
     <div class="card list" id="recent"></div>
   </div>
+  <div class="wave" aria-hidden="true"></div>
 </section>
 
 <header class="wiz" id="wizhead" hidden>
@@ -135,9 +136,10 @@
   </div>
   <div class="page">
     <div class="pg-head">
-      <div class="col g2"><span class="pg-title">Ontvangstbewijs</span><span class="pg-sub">Sleutels &amp; alarmtags · <span data-text="org"></span></span></div>
+      <img class="pg-logo" src="brand/logo.png" alt="">
       <div class="col g2 end pg-mono7"><span data-text="docNo"></span><span class="muted"><span data-text="dateShort"></span> <span data-text="timeShort"></span></span></div>
     </div>
+    <div class="col g2"><span class="pg-title">Ontvangstbewijs</span><span class="pg-sub">Sleutels &amp; alarmtags · <span data-text="org"></span></span></div>
     <div class="pg-grid">
       <span class="muted">Ontvanger</span><b data-text="name"></b>
       <span class="muted">Afdeling</span><span data-text="deptOrDash"></span>
@@ -155,6 +157,7 @@
       <div class="pg-sig" id="pg-sig"></div>
       <div class="pg-signline"><span data-text="name"></span><span class="muted">Akkoord voorwaarden ✓</span></div>
     </div>
+    <div class="pg-wave" aria-hidden="true"></div>
   </div>
   <p class="note">Na akkoord opent Outlook met deze PDF als bijlage, gericht aan <b data-text="email"></b>.</p>
 </section>
@@ -169,6 +172,7 @@
     <div class="kv"><span>Documentnr.</span><span data-text="docNo"></span></div>
     <div class="kv"><span>Tijdstip</span><span><span data-text="dateShort"></span> <span data-text="timeShort"></span></span></div>
   </div>
+  <div class="wave" aria-hidden="true"></div>
 </section>
 
 <section class="screen" data-screen="settings" hidden>
