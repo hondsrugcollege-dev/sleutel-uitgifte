@@ -46,6 +46,7 @@ h1{margin:0;font-size:34px;line-height:1.05;font-weight:600;letter-spacing:-.02e
 h2{margin:0;font-size:28px;font-weight:600;letter-spacing:-.02em}
 h2.big{font-size:32px;line-height:1.1}
 .sub{margin:0;color:var(--muted);font-size:15px;line-height:1.45;text-wrap:pretty}
+.sub.lhn{line-height:normal} /* ontwerp: enkelregelige subs zonder 1.45 */
 .sub16{margin:0;font-size:16px;color:var(--muted);line-height:1.45;text-wrap:pretty}
 .small{font-size:12px;color:var(--muted)}
 .mono14{font:500 14px var(--mono)}
@@ -134,6 +135,7 @@ h2.big{font-size:32px;line-height:1.1}
 .sumd{font:500 13px var(--mono);color:var(--body);text-align:right}
 .sigbox{position:relative;background:var(--surface);border:1.5px solid var(--line-input);border-radius:18px;height:230px;overflow:hidden;flex:none}
 .sigbox.err{border-color:var(--err)}
+#e-sig{margin-top:-8px}
 .sigbox canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none;cursor:crosshair}
 .sigline{position:absolute;left:20px;right:20px;bottom:46px;border-bottom:1.5px dashed var(--sigline);pointer-events:none}
 .sigx{position:absolute;left:20px;bottom:50px;font-size:22px;color:var(--sigline);pointer-events:none}
