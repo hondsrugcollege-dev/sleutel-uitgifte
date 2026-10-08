@@ -79,12 +79,12 @@ assert.equal(copy('out').who, 'Wie ontvangt?');
 // mailBody
 assert.equal(
   mailBody(full, m, 'Facilitaire Dienst'),
-  'Beste beheerder,\n\nIn de bijlage het getekende ontvangstbewijs (UIT-2026-0007) van Sanne de Vries (Schoonmaak), uitgegeven op 08-10-2026 om 09:05.\n\nMet vriendelijke groet,\nFacilitaire Dienst',
+  'In de bijlage het getekende ontvangstbewijs (UIT-2026-0007) van Sanne de Vries (Schoonmaak), uitgegeven op 08-10-2026 om 09:05.\n\nMet vriendelijke groet,\nFacilitaire Dienst',
 );
 assert.ok(mailBody({ ...full, dept: '' }, m, 'X').includes('van Sanne de Vries, uitgegeven'));
 assert.equal(
   mailBody({ ...full, mode: 'in', name: 'Jeroen Bakker', dept: '' }, mi, 'Facilitaire Dienst'),
-  'Beste beheerder,\n\nIn de bijlage het getekende innamebewijs (IN-2026-0007) van Jeroen Bakker, ingenomen op 08-10-2026 om 09:05.\n\nMet vriendelijke groet,\nFacilitaire Dienst',
+  'In de bijlage het getekende innamebewijs (IN-2026-0007) van Jeroen Bakker, ingenomen op 08-10-2026 om 09:05.\n\nMet vriendelijke groet,\nFacilitaire Dienst',
 );
 
 // formatWhen

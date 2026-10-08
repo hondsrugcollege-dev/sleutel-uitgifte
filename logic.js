@@ -69,7 +69,7 @@ export function subject(s) {
 }
 
 export const mailBody = (s, m, org) =>
-  `Beste beheerder,\n\nIn de bijlage het getekende ${copy(s.mode).doc.toLowerCase()} (${m.docNo}) van ${s.name}${s.dept ? ` (${s.dept})` : ''}, ${copy(s.mode).verb} op ${m.dateShort} om ${m.timeShort}.\n\nMet vriendelijke groet,\n${org}`;
+  `In de bijlage het getekende ${copy(s.mode).doc.toLowerCase()} (${m.docNo}) van ${s.name}${s.dept ? ` (${s.dept})` : ''}, ${copy(s.mode).verb} op ${m.dateShort} om ${m.timeShort}.\n\nMet vriendelijke groet,\n${org}`;
 
 export const recentItems = (s) =>
   (s.mode === 'in' ? 'Inname · ' : '') +
