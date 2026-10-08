@@ -12,6 +12,7 @@ export const DEFAULTS = {
   org: 'Facilitaire Dienst',
   email: 'beveiliging@organisatie.nl',
   nextSeq: 1,
+  nextSeqIn: 1,
   requireScroll: true,
 };
 

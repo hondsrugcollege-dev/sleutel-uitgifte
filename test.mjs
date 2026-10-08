@@ -1,11 +1,15 @@
 import assert from 'node:assert/strict';
-import { STEPS, emptyIssue, errors, itemList, meta, subject, mailBody, recentItems, formatWhen, prune, initials, settingsErrors } from './logic.js';
-import { terms, TERMS_VERSION, BUILDINGS } from './config.js';
+import { stepsFor, copy, emptyIssue, errors, itemList, meta, subject, mailBody, recentItems, formatWhen, prune, initials, settingsErrors } from './logic.js';
+import { terms, TERMS_VERSION, BUILDINGS, DEFAULTS } from './config.js';
 
 const now = new Date(2026, 9, 8, 9, 5);
 const s = emptyIssue(now);
 
-assert.deepEqual(STEPS, ['recipient', 'items', 'terms', 'sign', 'preview']);
+assert.deepEqual(stepsFor('out'), ['recipient', 'items', 'terms', 'sign', 'preview']);
+assert.deepEqual(stepsFor('in'), ['recipient', 'items', 'sign', 'preview']);
+assert.equal(s.mode, 'out');
+assert.equal(emptyIssue(now, 'in').mode, 'in');
+assert.deepEqual(s.keys, [{ building: null, keyNo: '' }]);
 assert.equal(s.keyOn, true);
 assert.equal(s.tagOn, false);
 assert.equal(s.now, now);
@@ -15,9 +19,13 @@ assert.equal(errors(s).recipient, true);
 assert.equal(errors({ ...s, name: '  ' }).recipient, true);
 assert.equal(errors({ ...s, name: 'Sanne' }).recipient, false);
 assert.equal(errors({ ...s, keyOn: false, tagOn: false }).items, true);
-assert.equal(errors({ ...s, building: 'B', keyNo: '' }).items, true);
-assert.equal(errors({ ...s, building: null, keyNo: 'K-1' }).items, true);
-assert.equal(errors({ ...s, building: 'B', keyNo: 'K-1' }).items, false);
+const k = (building, keyNo) => ({ building, keyNo });
+assert.equal(errors({ ...s, keys: [k('B', '')] }).items, true);
+assert.equal(errors({ ...s, keys: [k(null, 'K-1')] }).items, true);
+assert.equal(errors({ ...s, keys: [k('B', 'K-1')] }).items, false);
+assert.equal(errors({ ...s, keys: [k('B', 'K-1'), k('A', ' ')] }).items, true);
+assert.equal(errors({ ...s, keys: [k('B', 'K-1'), k('A', 'K-2')] }).items, false);
+assert.equal(errors({ ...s, keys: [] }).items, true);
 assert.equal(errors({ ...s, keyOn: false, tagOn: true, tagNo: ' ' }).items, true);
 assert.equal(errors({ ...s, keyOn: false, tagOn: true, tagNo: '0417' }).items, false);
 assert.equal(errors(s).terms, true);
@@ -27,12 +35,22 @@ assert.equal(errors({ ...s, sig: 'data:image/png;base64,x' }).sign, false);
 assert.equal(errors(s).preview, false);
 
 // itemList / subject / recentItems
-const full = { ...s, name: 'Sanne de Vries', dept: 'Schoonmaak', building: 'B', keyNo: 'K-1042', tagOn: true, tagNo: '0417' };
+const full = { ...s, name: 'Sanne de Vries', dept: 'Schoonmaak', keys: [k('B', 'K-1042')], tagOn: true, tagNo: '0417' };
 assert.deepEqual(itemList(full), [
   { label: 'Toegangssleutel', detail: 'Gebouw B – Logistiek · K-1042' },
   { label: 'Alarmtag', detail: 'Tag 0417' },
 ]);
 assert.deepEqual(itemList({ ...s, keyOn: true }), [{ label: 'Toegangssleutel', detail: '— · —' }]);
+const two = { ...full, keys: [k('B', 'K-1042'), k('P', 'P-0007')], tagOn: false };
+assert.deepEqual(itemList(two), [
+  { label: 'Toegangssleutel', detail: 'Gebouw B – Logistiek · K-1042' },
+  { label: 'Toegangssleutel', detail: 'Parkeergarage · P-0007' },
+]);
+assert.equal(subject(two), 'Ontvangstbewijs toegangssleutels – Sanne de Vries');
+assert.equal(subject({ ...two, mode: 'in', tagOn: true }), 'Innamebewijs toegangssleutels en alarmtag – Sanne de Vries');
+assert.equal(recentItems(two), 'Sleutel Gebouw B – Logistiek · Sleutel Parkeergarage');
+assert.equal(recentItems({ ...two, mode: 'in' }), 'Inname · Sleutel Gebouw B – Logistiek · Sleutel Parkeergarage');
+assert.equal(itemList({ ...full, keyOn: false }).length, 1);
 assert.equal(subject(full), 'Ontvangstbewijs toegangssleutel en alarmtag – Sanne de Vries');
 assert.equal(subject({ ...full, tagOn: false }), 'Ontvangstbewijs toegangssleutel – Sanne de Vries');
 assert.equal(recentItems(full), 'Sleutel Gebouw B – Logistiek · Tag 0417');
@@ -48,6 +66,15 @@ assert.equal(meta('Jose\u0301', now, 1).fileName, 'Ontvangstbewijs_Jos\u00e9_202
 assert.equal(meta('', now, 1).fileName, 'Ontvangstbewijs_Ontvanger_2026-10-08.pdf');
 assert.equal(meta('a/b', now, 12345).docNo, 'UIT-2026-12345');
 assert.equal(meta('a/b', now, 1).fileName, 'Ontvangstbewijs_ab_2026-10-08.pdf');
+const mi = meta('Jeroen Bakker', now, 7, 'in');
+assert.equal(mi.docNo, 'IN-2026-0007');
+assert.equal(mi.fileName, 'Innamebewijs_Jeroen_Bakker_2026-10-08.pdf');
+
+// copy
+assert.equal(copy('out').doc, 'Ontvangstbewijs');
+assert.equal(copy('in').doc, 'Innamebewijs');
+assert.equal(copy('in').who, 'Wie levert in?');
+assert.equal(copy('out').who, 'Wie ontvangt?');
 
 // mailBody
 assert.equal(
@@ -55,6 +82,10 @@ assert.equal(
   'Beste beheerder,\n\nIn de bijlage het getekende ontvangstbewijs (UIT-2026-0007) van Sanne de Vries (Schoonmaak), uitgegeven op 08-10-2026 om 09:05.\n\nMet vriendelijke groet,\nFacilitaire Dienst',
 );
 assert.ok(mailBody({ ...full, dept: '' }, m, 'X').includes('van Sanne de Vries, uitgegeven'));
+assert.equal(
+  mailBody({ ...full, mode: 'in', name: 'Jeroen Bakker', dept: '' }, mi, 'Facilitaire Dienst'),
+  'Beste beheerder,\n\nIn de bijlage het getekende innamebewijs (IN-2026-0007) van Jeroen Bakker, ingenomen op 08-10-2026 om 09:05.\n\nMet vriendelijke groet,\nFacilitaire Dienst',
+);
 
 // formatWhen
 assert.equal(formatWhen(new Date(2026, 9, 8, 8, 42).toISOString(), now), 'Vandaag 08:42');
@@ -80,13 +111,14 @@ assert.equal(initials('hondsrug college beheer'), 'HC');
 assert.equal(initials('  '), '?');
 
 // settingsErrors
-assert.deepEqual(settingsErrors({ org: 'X', email: 'a@b.nl', nextSeq: '12' }), { org: false, email: false, nextSeq: false });
-assert.deepEqual(settingsErrors({ org: ' ', email: 'ab.nl', nextSeq: '0' }), { org: true, email: true, nextSeq: true });
+assert.deepEqual(settingsErrors({ org: 'X', email: 'a@b.nl', nextSeq: '12', nextSeqIn: '3' }), { org: false, email: false, nextSeq: false, nextSeqIn: false });
+assert.deepEqual(settingsErrors({ org: ' ', email: 'ab.nl', nextSeq: '0', nextSeqIn: 'x' }), { org: true, email: true, nextSeq: true, nextSeqIn: true });
 assert.equal(settingsErrors({ org: 'X', email: 'a@b.nl', nextSeq: '1.5' }).nextSeq, true);
 assert.equal(settingsErrors({ org: 'X', email: 'a b@c.nl', nextSeq: '1' }).email, true);
 
 // config
 assert.equal(TERMS_VERSION, '2026.1');
+assert.equal(DEFAULTS.nextSeqIn, 1);
 assert.equal(BUILDINGS.length, 4);
 const t = terms('Org X');
 assert.equal(t.length, 8);

@@ -1,5 +1,5 @@
 import { TERMS_VERSION, terms } from './config.js';
-import { itemList } from './logic.js';
+import { itemList, copy } from './logic.js';
 
 // buildPdf moet synchroon blijven (iOS user activation), dus beelden vooraf laden.
 const preload = (src) => Object.assign(new Image(), { src });
@@ -8,6 +8,7 @@ const WAVE = preload('brand/wave-pdf.jpg'); // golf uit HC-template, 35% op wit 
 const ready = (img) => img.complete && img.naturalWidth > 0;
 
 export function buildPdf(s, m, org) {
+  const c = copy(s.mode);
   const doc = new window.jspdf.jsPDF({ unit: 'mm', format: 'a4', compress: true });
   if (ready(WAVE)) {
     const h = 210 * WAVE.naturalHeight / WAVE.naturalWidth;
@@ -17,13 +18,13 @@ export function buildPdf(s, m, org) {
   doc.setFont('helvetica', 'normal'); doc.setFontSize(9); doc.text(`${m.docNo}   ${m.dateShort} ${m.timeShort}`, 190, 21, { align: 'right' });
   doc.setLineWidth(0.5); doc.line(20, 31, 190, 31);
   let y = 42;
-  doc.setFont('helvetica', 'bold'); doc.setFontSize(20); doc.text('Ontvangstbewijs', 20, y);
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(20); doc.text(c.doc, 20, y);
   doc.setFont('helvetica', 'normal'); doc.setFontSize(9);
   y += 6; doc.setTextColor(90); doc.text(`Sleutels & alarmtags · ${org}`, 20, y); doc.setTextColor(0);
   y += 10;
 
   doc.setFontSize(10);
-  [['Ontvanger', s.name], ['Afdeling', s.dept || '—'], ['Uitgegeven', m.dateLong]].forEach(([k, v]) => {
+  [[c.person, s.name], ['Afdeling', s.dept || '—'], [c.dateWord, m.dateLong]].forEach(([k, v]) => {
     doc.setTextColor(90); doc.text(k, 20, y); doc.setTextColor(0); doc.text(v, 55, y); y += 6;
   });
 
@@ -36,13 +37,15 @@ export function buildPdf(s, m, org) {
     y += 3; doc.setDrawColor(210); doc.setLineWidth(0.2); doc.line(20, y, 190, y); doc.setDrawColor(0); y += 6;
   });
 
-  y += 6; doc.setFont('helvetica', 'bold'); doc.setFontSize(8); doc.text(`VOORWAARDEN (v${TERMS_VERSION})`, 20, y); y += 5;
-  doc.setFont('helvetica', 'normal');
-  terms(org).forEach((t) => {
-    const lines = doc.splitTextToSize(`${t.n}. ${t.title}. ${t.body}`, 170);
-    doc.text(lines, 20, y);
-    y += lines.length * 3.6 + 1.6;
-  });
+  if (s.mode !== 'in') { // inname heeft geen voorwaarden
+    y += 6; doc.setFont('helvetica', 'bold'); doc.setFontSize(8); doc.text(`VOORWAARDEN (v${TERMS_VERSION})`, 20, y); y += 5;
+    doc.setFont('helvetica', 'normal');
+    terms(org).forEach((t) => {
+      const lines = doc.splitTextToSize(`${t.n}. ${t.title}. ${t.body}`, 170);
+      doc.text(lines, 20, y);
+      y += lines.length * 3.6 + 1.6;
+    });
+  }
 
   y = Math.max(y + 10, 240);
   if (s.sig) {
@@ -53,7 +56,7 @@ export function buildPdf(s, m, org) {
   }
   doc.setLineWidth(0.3); doc.line(20, y, 120, y); y += 5;
   doc.setFontSize(9); doc.text(s.name, 20, y);
-  doc.setTextColor(90); doc.text(`Getekend ${m.dateShort} ${m.timeShort} · akkoord voorwaarden`, 20, y + 5);
+  doc.setTextColor(90); doc.text(`Getekend ${m.dateShort} ${m.timeShort} · ${c.signedNote}`, 20, y + 5);
   return doc.output('blob');
 }
 

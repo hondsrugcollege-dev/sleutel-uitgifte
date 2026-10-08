@@ -96,3 +96,11 @@ Bron: map `HC Logo/` (logo's + PowerPoint-template). Afgeleide bestanden in `bra
 - App: breed logo linksboven op Start (vervangt organisatienaam); voortgangsbalk cyaan; plus-knop oranje; golf uit template onderaan Start en Verzonden. Knoppen blijven donker (contrast).
 - PDF: logo linksboven (45 mm breed), golf uit template als watermerk over volle breedte onderaan, 35% dekking (voorgemengd in `brand/wave-pdf.jpg`).
 - App-icoon: H-teken (hoog logo zonder slogan) op wit.
+
+## Inname + meerdere sleutels (2026-10-08, goedgekeurd via voorbeeld)
+- Sleutels zijn rijen `keys: [{ building, keyNo }]`: per rij een native gebouwkiezer (`<select>`) + sleutelnummer, "+ Nog een sleutel", "Verwijderen" vanaf 2 rijen. Elke rij moet compleet zijn. Alarmtag blijft één.
+- Tweede startactie "Sleutels innemen" (`mode: 'in'`): stappen Inleveraar → Middelen → Handtekening → PDF (geen voorwaarden). De inleveraar tekent.
+- Teksten per modus centraal in `copy(mode)` (`logic.js`), gebruikt door app en PDF: Innamebewijs, "Ingeleverd door", "Ingenomen", onderschrift "ingeleverd".
+- Eigen nummerreeks `IN-{jaar}-{0001}` met instelling "Volgend innamenummer" (`nextSeqIn`); UIT-reeks ongewijzigd.
+- Recent: inname herkenbaar aan "Inname · …". Verzonden-scherm heeft "Naar start" naast "Nieuwe uitgifte/inname".
+- Oriëntatie Teams: aanbevolen Power Automate-flow op de beheermailbox die PDF-bijlagen in de SharePoint-map van het kanaal zet; niet in de app gebouwd.

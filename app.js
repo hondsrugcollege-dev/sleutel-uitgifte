@@ -1,5 +1,5 @@
 import { BUILDINGS, TERMS_VERSION, terms } from './config.js';
-import { STEPS, emptyIssue, errors, itemList, meta, subject, mailBody, recentItems, formatWhen, prune, initials, settingsErrors } from './logic.js';
+import { stepsFor, copy, emptyIssue, errors, itemList, meta, subject, mailBody, recentItems, formatWhen, prune, initials, settingsErrors } from './logic.js';
 import { loadSettings, saveSettings, loadRecent, saveRecent, putPdf, getPdf, delPdf } from './store.js';
 import { createSignature } from './sign.js';
 import { buildPdf, shareFile } from './pdf.js';
@@ -26,9 +26,20 @@ function toast(msg) {
   toastTimer = setTimeout(() => { el.hidden = true; }, 2600);
 }
 
+const seqKey = (mode) => (mode === 'in' ? 'nextSeqIn' : 'nextSeq');
+const curMeta = () => meta(s.name, s.now, settings[seqKey(s.mode)], s.mode);
+
+// Alleen bij toevoegen/verwijderen/start opnieuw opbouwen, zodat de focus bij typen blijft.
+function renderKeys() {
+  const opts = BUILDINGS.map((b) => `<option value="${esc(b.id)}">${esc(b.name)}</option>`).join('');
+  $('#keys').innerHTML = s.keys.map((k, i) => `<div class="krow">
+    <div class="khead"><span class="flabel">Sleutel ${i + 1}</span>${s.keys.length > 1 ? `<button class="textbtn" data-act="removeKey" data-i="${i}">Verwijderen</button>` : ''}</div>
+    <select data-key="${i}" data-kfield="building" aria-label="Gebouw sleutel ${i + 1}"><option value="">Kies gebouw</option>${opts}</select>
+    <input class="code" data-key="${i}" data-kfield="keyNo" placeholder="Sleutelnummer, bijv. K-1042" autocomplete="off" autocapitalize="characters" aria-label="Sleutelnummer ${i + 1}">
+  </div>`).join('');
+}
+
 function renderStatic() {
-  $('#buildings').innerHTML = BUILDINGS.map((b) =>
-    `<button class="radio" data-act="building" data-id="${esc(b.id)}"><span class="ring"></span><span class="col g1"><span class="bname">${esc(b.name)}</span><span class="baddr">${esc(b.addr)}</span></span></button>`).join('');
   const t = terms(settings.org);
   $('#terms').innerHTML = t.map((a) =>
     `<div class="art"><span class="artn">${a.n}</span><div class="col g4"><span class="artt">${esc(a.title)}</span><span class="artb">${esc(a.body)}</span></div></div>`).join('');
@@ -39,20 +50,22 @@ function renderRecent() {
   $('#recent').innerHTML = recent.length
     ? recent.map((r) =>
       `<button class="rrow" data-act="resend" data-id="${esc(r.id)}"><span class="col g3 min0"><span class="rname">${esc(r.name)}</span><span class="rsub">${esc(r.items)}</span></span><span class="col g4 end"><span class="rwhen">${esc(formatWhen(r.when))}</span><span class="badge">Verzonden</span></span></button>`).join('')
-    : '<div class="empty">Nog geen uitgiftes</div>';
+    : '<div class="empty">Nog niets verzonden</div>';
 }
 
 function render() {
-  const idx = STEPS.indexOf(s.step), e = errors(s), t = s.touched;
-  const m = meta(s.name, s.now, settings.nextSeq);
+  const steps = stepsFor(s.mode), idx = steps.indexOf(s.step), e = errors(s), t = s.touched;
+  const m = curMeta(), c = copy(s.mode);
   const shown = s.step === 'done' ? s.sent : m;
   const flag = (sel, cls, on) => $(sel).classList.toggle(cls, on);
   const showIf = (sel, on) => { $(sel).hidden = !on; };
 
   $$('[data-screen]').forEach((el) => { el.hidden = el.dataset.screen !== s.step; });
   $('#wizhead').hidden = idx < 0;
-  $('#stepno').textContent = `STAP ${idx + 1} / 5`;
-  $$('#progress i').forEach((el, i) => el.classList.toggle('on', i <= idx));
+  $('#stepno').textContent = `STAP ${idx + 1} / ${steps.length}`;
+  $$('#progress i').forEach((el, i) => { el.hidden = i >= steps.length; el.classList.toggle('on', i <= idx); });
+  const words = { ...c, docLower: c.doc.toLowerCase() };
+  $$('[data-copy]').forEach((el) => { el.textContent = words[el.dataset.copy]; });
 
   const text = {
     org: settings.org, initials: initials(settings.org), email: settings.email,
@@ -74,12 +87,18 @@ function render() {
   $('#tagcard .mhead').setAttribute('aria-checked', s.tagOn);
   $('#keybody').hidden = !s.keyOn;
   $('#tagbody').hidden = !s.tagOn;
-  $$('#buildings .radio').forEach((el) => el.classList.toggle('sel', el.dataset.id === s.building));
   showIf('#e-items', t && !s.keyOn && !s.tagOn);
-  showIf('#e-building', t && s.keyOn && !s.building);
-  const keyBad = t && s.keyOn && !s.keyNo.trim();
+  let keysBad = false;
+  $$('[data-key]').forEach((el) => {
+    const v = s.keys[el.dataset.key]?.[el.dataset.kfield] || '';
+    if (el.value !== v) el.value = v;
+    const bad = t && s.keyOn && !v.trim();
+    keysBad ||= bad;
+    el.classList.toggle('err', bad);
+    if (el.tagName === 'SELECT') el.classList.toggle('empty', !v);
+  });
+  showIf('#e-keys', keysBad);
   const tagBad = t && s.tagOn && !s.tagNo.trim();
-  flag('#f-keyNo', 'err', keyBad); showIf('#e-keyNo', keyBad);
   flag('#f-tagNo', 'err', tagBad); showIf('#e-tagNo', tagBad);
 
   // Voorwaarden
@@ -96,12 +115,14 @@ function render() {
   $('#sig-ph').hidden = !!s.sig;
   flag('#sigbox', 'err', t && !s.sig);
   showIf('#e-sig', t && !s.sig);
+  $('#pg-termsblock').hidden = s.mode === 'in';
   $('#pg-sig').style.backgroundImage = s.sig ? `url(${s.sig})` : 'none';
 
   // CTA
-  const labels = { recipient: 'Volgende', items: 'Naar voorwaarden', terms: 'Naar handtekening', sign: 'PDF bekijken', preview: 'Akkoord & verzenden', done: 'Nieuwe uitgifte' };
+  const labels = { recipient: 'Volgende', items: c.itemsCta, terms: 'Naar handtekening', sign: 'PDF bekijken', preview: 'Akkoord & verzenden', done: c.again };
   $('#cta').hidden = !(idx >= 0 || s.step === 'done');
-  $('#cta-edit').hidden = s.step !== 'preview';
+  $('#cta-edit').hidden = s.step !== 'preview' && s.step !== 'done';
+  $('#cta-edit').textContent = s.step === 'done' ? 'Naar start' : 'Wijzigen';
   $('#cta-main').textContent = labels[s.step] || '';
   flag('#cta-main', 'blocked', (s.step === 'terms' && !s.agreed) || (s.step === 'sign' && !s.sig));
   flag('#cta-main', 'go', s.step === 'preview');
@@ -109,7 +130,7 @@ function render() {
   // Instellingen
   if (draft) {
     const se = settingsErrors(draft);
-    for (const k of ['org', 'email', 'nextSeq']) {
+    for (const k of ['org', 'email', 'nextSeq', 'nextSeqIn']) {
       const el = $(`#s-${k}`);
       if (el.value !== String(draft[k])) el.value = draft[k];
       el.classList.toggle('err', se[k]);
@@ -140,24 +161,26 @@ function go(step) {
   if (step === 'terms') checkTermsRead(); // korte tekst op groot scherm: niets te scrollen
 }
 
-function start() {
-  s = { step: 'home', ...emptyIssue(new Date()), sent: null };
+function start(mode = 'out') {
+  s = { step: 'home', ...emptyIssue(new Date(), mode), sent: null };
   renderStatic();
+  renderKeys();
   $('#tscroll').scrollTop = 0;
   go('recipient');
 }
 
 function next() {
-  if (s.step === 'done') return start();
+  if (s.step === 'done') return start(s.mode);
   if (errors(s)[s.step]) { s.touched = true; return render(); }
   if (s.step === 'preview') return send();
-  go(STEPS[STEPS.indexOf(s.step) + 1]);
+  const steps = stepsFor(s.mode);
+  go(steps[steps.indexOf(s.step) + 1]);
 }
 
 function back() {
   if (s.step === 'settings') return go('home');
-  const i = STEPS.indexOf(s.step);
-  go(i <= 0 ? 'home' : STEPS[i - 1]);
+  const steps = stepsFor(s.mode), i = steps.indexOf(s.step);
+  go(i <= 0 ? 'home' : steps[i - 1]);
 }
 
 function pdfFile(m) {
@@ -169,7 +192,7 @@ async function send() {
   if (busy) return;
   busy = true;
   try {
-    const m = meta(s.name, s.now, settings.nextSeq);
+    const m = curMeta();
     const file = pdfFile(m);
     navigator.clipboard?.writeText(settings.email)?.catch(() => {});
     toast('Adres gekopieerd — plak in Aan');
@@ -181,10 +204,10 @@ async function send() {
       return;
     }
     if (how === 'downloaded') toast('Delen niet beschikbaar, PDF gedownload');
-    recent = [{ id: m.docNo, docNo: m.docNo, fileName: m.fileName, name: s.name, items: recentItems(s), when: new Date().toISOString() }, ...recent];
+    recent = [{ id: m.docNo, docNo: m.docNo, fileName: m.fileName, name: s.name, items: recentItems(s), when: new Date().toISOString(), mode: s.mode }, ...recent];
     saveRecent(recent);
     s.sent = { docNo: m.docNo, dateShort: m.dateShort, timeShort: m.timeShort };
-    settings.nextSeq += 1;
+    settings[seqKey(s.mode)] += 1;
     saveSettings(settings);
     go('done');
     // Pas na teller en navigatie; IndexedDB mag falen of hangen zonder het nummer te raken.
@@ -203,7 +226,7 @@ async function resend(id) {
   if (!r || !buf) return toast('PDF niet meer beschikbaar');
   navigator.clipboard?.writeText(settings.email)?.catch(() => {});
   try {
-    await shareFile(new File([buf], r.fileName, { type: 'application/pdf' }), `Ontvangstbewijs ${r.docNo}`);
+    await shareFile(new File([buf], r.fileName, { type: 'application/pdf' }), `${copy(r.mode).doc} ${r.docNo}`);
   } catch (err) {
     if (err.name === 'NotAllowedError') toast('Tik nogmaals om te delen');
     else if (err.name !== 'AbortError') toast('Delen mislukt. Probeer het opnieuw.');
@@ -211,15 +234,16 @@ async function resend(id) {
 }
 
 const actions = {
-  start, next, back,
+  start: () => start('out'), startIn: () => start('in'), next, back,
   cancel: () => { s = { step: 'home', ...emptyIssue(), sent: null }; go('home'); },
-  settings: () => { draft = { org: settings.org, email: settings.email, nextSeq: String(settings.nextSeq) }; go('settings'); },
+  settings: () => { draft = { org: settings.org, email: settings.email, nextSeq: String(settings.nextSeq), nextSeqIn: String(settings.nextSeqIn) }; go('settings'); },
   toggleKey: () => { s.keyOn = !s.keyOn; render(); },
   toggleTag: () => { s.tagOn = !s.tagOn; render(); },
-  building: (el) => { s.building = el.dataset.id; render(); },
+  addKey: () => { s.keys.push({ building: '', keyNo: '' }); renderKeys(); render(); },
+  removeKey: (el) => { s.keys.splice(Number(el.dataset.i), 1); renderKeys(); render(); },
   agree: () => { if (s.termsRead || !settings.requireScroll) { s.agreed = !s.agreed; render(); } },
   clearSig: () => sig.clear(),
-  download: () => { shareFile(pdfFile(meta(s.name, s.now, settings.nextSeq))).catch(() => {}); },
+  download: () => { shareFile(pdfFile(curMeta())).catch(() => {}); },
   resend: (el) => resend(el.dataset.id),
   toggleScroll: () => { settings.requireScroll = !settings.requireScroll; saveSettings(settings); render(); },
 };
@@ -232,11 +256,13 @@ document.addEventListener('click', (ev) => {
 document.addEventListener('input', (ev) => {
   const f = ev.target.dataset.field;
   if (f) { s[f] = ev.target.value; return render(); }
+  const kf = ev.target.dataset.kfield;
+  if (kf) { s.keys[ev.target.dataset.key][kf] = ev.target.value; return render(); }
   const k = ev.target.dataset.setting;
   if (k && draft) {
     draft[k] = ev.target.value;
     if (!settingsErrors(draft)[k]) {
-      settings[k] = k === 'nextSeq' ? Number(draft[k]) : draft[k].trim();
+      settings[k] = k.startsWith('nextSeq') ? Number(draft[k]) : draft[k].trim();
       saveSettings(settings);
     }
     render();
@@ -253,4 +279,5 @@ pruned.drop.forEach((id) => delPdf(id).catch(() => {}));
 addEventListener('resize', () => { if (s.step === 'sign') sig.setup(s.sig); });
 
 renderStatic();
+renderKeys();
 render();

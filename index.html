@@ -27,14 +27,18 @@
   </div>
   <div class="col g8">
     <h1>Uitgifte sleutels &amp; alarmtags</h1>
-    <p class="sub">Laat de ontvanger tekenen voor ontvangst. Het ontvangstbewijs gaat als PDF via Outlook naar beheer.</p>
+    <p class="sub">Laat de ontvanger tekenen bij uitgifte of inname. Het bewijs gaat als PDF via Outlook naar beheer.</p>
   </div>
   <button class="hero" data-act="start">
     <span class="col g4"><span class="hero-t">Nieuwe uitgifte</span><span class="hero-s">Ontvanger · middelen · handtekening</span></span>
     <span class="plus"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span>
   </button>
+  <button class="hero hero2" data-act="startIn">
+    <span class="col g4"><span class="hero-t">Sleutels innemen</span><span class="hero-s">Inleveraar · middelen · handtekening</span></span>
+    <span class="plus"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14L4 9l5-5"/><path d="M4 9h10a6 6 0 010 12h-3"/></svg></span>
+  </button>
   <div class="card mailcard">
-    <div class="col g3 min0"><span class="small">Ontvangstbewijzen versturen naar</span><span class="mono14 ellipsis" data-text="email"></span></div>
+    <div class="col g3 min0"><span class="small">Bewijzen versturen naar</span><span class="mono14 ellipsis" data-text="email"></span></div>
     <button class="link" data-act="settings">Wijzig</button>
   </div>
   <div class="col g10">
@@ -54,37 +58,33 @@
 </header>
 
 <section class="screen" data-screen="recipient" hidden>
-  <h2>Wie ontvangt?</h2>
-  <label class="field"><span class="flabel">Naam ontvanger</span>
+  <h2 data-copy="who"></h2>
+  <label class="field"><span class="flabel" data-copy="nameLabel"></span>
     <input id="f-name" data-field="name" placeholder="Voor- en achternaam" autocomplete="off" autocapitalize="words">
-    <span class="errtxt" id="e-name" hidden>Vul de naam van de ontvanger in.</span>
+    <span class="errtxt" id="e-name" hidden>Vul een naam in.</span>
   </label>
   <label class="field"><span class="flabel">Afdeling of bedrijf <span class="opt">(optioneel)</span></span>
     <input data-field="dept" placeholder="Bijv. Schoonmaak, Facilitair" autocomplete="off">
   </label>
-  <div class="field"><span class="flabel">Datum uitgifte</span>
+  <div class="field"><span class="flabel" data-copy="dateLabel"></span>
     <div class="readonly"><span data-text="dateLong"></span><span class="auto">automatisch</span></div>
   </div>
 </section>
 
 <section class="screen g16" data-screen="items" hidden>
-  <div class="col g6"><h2>Wat wordt uitgegeven?</h2><p class="sub lhn">Kies één of beide.</p></div>
+  <div class="col g6"><h2 data-copy="what"></h2><p class="sub lhn">Kies één of beide.</p></div>
   <div class="banner" id="e-items" hidden>Selecteer minimaal een sleutel of een alarmtag.</div>
   <div class="mcard" id="keycard">
     <button class="mhead" data-act="toggleKey" role="switch">
       <span class="tile"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#15171A" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="15" r="4"/><path d="M11 12l9-9M17 6l3 3M15 8l2 2"/></svg></span>
-      <span class="col g2 grow"><span class="mt">Toegangssleutel</span><span class="ms">Fysieke sleutel voor een gebouw</span></span>
+      <span class="col g2 grow"><span class="mt">Toegangssleutels</span><span class="ms">Eén of meer sleutels, per gebouw</span></span>
       <span class="switch"></span>
     </button>
     <div class="mbody" id="keybody">
       <div class="divider"></div>
-      <span class="flabel">Gebouw</span>
-      <div class="col g8" id="buildings"></div>
-      <span class="errtxt" id="e-building" hidden>Kies een gebouw.</span>
-      <label class="field"><span class="flabel">Sleutelnummer</span>
-        <input class="code" id="f-keyNo" data-field="keyNo" placeholder="K-1042" autocomplete="off" autocapitalize="characters">
-        <span class="errtxt" id="e-keyNo" hidden>Vul het sleutelnummer in.</span>
-      </label>
+      <div class="col g14" id="keys"></div>
+      <span class="errtxt" id="e-keys" hidden>Kies per sleutel een gebouw en vul het nummer in.</span>
+      <button class="link addkey" data-act="addKey">+ Nog een sleutel</button>
     </div>
   </div>
   <div class="mcard" id="tagcard">
@@ -117,7 +117,7 @@
 </section>
 
 <section class="screen g18" data-screen="sign" hidden>
-  <div class="col g6"><h2>Handtekening</h2><p class="sub">Ik verklaar onderstaande in goede staat te hebben ontvangen en ga akkoord met de voorwaarden.</p></div>
+  <div class="col g6"><h2>Handtekening</h2><p class="sub" data-copy="signText"></p></div>
   <div class="col g8" id="summary"></div>
   <div class="sigbox" id="sigbox">
     <canvas id="sig"></canvas>
@@ -139,23 +139,23 @@
       <img class="pg-logo" src="brand/logo.png" alt="">
       <div class="col g2 end pg-mono7"><span data-text="docNo"></span><span class="muted"><span data-text="dateShort"></span> <span data-text="timeShort"></span></span></div>
     </div>
-    <div class="col g2"><span class="pg-title">Ontvangstbewijs</span><span class="pg-sub">Sleutels &amp; alarmtags · <span data-text="org"></span></span></div>
+    <div class="col g2"><span class="pg-title" data-copy="doc"></span><span class="pg-sub">Sleutels &amp; alarmtags · <span data-text="org"></span></span></div>
     <div class="pg-grid">
-      <span class="muted">Ontvanger</span><b data-text="name"></b>
+      <span class="muted" data-copy="person"></span><b data-text="name"></b>
       <span class="muted">Afdeling</span><span data-text="deptOrDash"></span>
-      <span class="muted">Uitgegeven</span><span data-text="dateLong"></span>
+      <span class="muted" data-copy="dateWord"></span><span data-text="dateLong"></span>
     </div>
     <div class="col">
       <div class="pg-row pg-th"><span>Middel</span><span>Omschrijving</span></div>
       <div id="pg-items"></div>
     </div>
-    <div class="col g3">
+    <div class="col g3" id="pg-termsblock">
       <span class="pg-th0">Voorwaarden (v<span data-text="termsVersion"></span>)</span>
       <div class="col g3" id="pg-terms"></div>
     </div>
     <div class="pg-foot">
       <div class="pg-sig" id="pg-sig"></div>
-      <div class="pg-signline"><span data-text="name"></span><span class="muted">Akkoord voorwaarden ✓</span></div>
+      <div class="pg-signline"><span data-text="name"></span><span class="muted" data-copy="pgNote"></span></div>
     </div>
     <div class="pg-wave" aria-hidden="true"></div>
   </div>
@@ -166,7 +166,7 @@
   <div class="okcircle"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></div>
   <div class="col g10">
     <h2 class="big">Verzonden</h2>
-    <p class="sub16">Het ontvangstbewijs voor <span data-text="name"></span> is via Outlook verstuurd naar <span data-text="email"></span>.</p>
+    <p class="sub16">Het <span data-copy="docLower"></span> voor <span data-text="name"></span> is via Outlook verstuurd naar <span data-text="email"></span>.</p>
   </div>
   <div class="card kvcard">
     <div class="kv"><span>Documentnr.</span><span data-text="docNo"></span></div>
@@ -184,13 +184,17 @@
     <input id="s-org" data-setting="org" autocomplete="organization">
     <span class="errtxt" id="e-s-org" hidden>Vul de organisatienaam in.</span>
   </label>
-  <label class="field"><span class="flabel">Ontvangstbewijzen versturen naar</span>
+  <label class="field"><span class="flabel">Bewijzen versturen naar</span>
     <input id="s-email" class="code" data-setting="email" type="email" autocomplete="email" autocapitalize="off" spellcheck="false">
     <span class="errtxt" id="e-s-email" hidden>Vul een geldig mailadres in.</span>
   </label>
-  <label class="field"><span class="flabel">Volgend documentnummer</span>
+  <label class="field"><span class="flabel">Volgend uitgiftenummer (UIT-)</span>
     <input id="s-nextSeq" class="code" data-setting="nextSeq" inputmode="numeric" autocomplete="off">
     <span class="errtxt" id="e-s-nextSeq" hidden>Vul een geheel getal van 1 of hoger in.</span>
+  </label>
+  <label class="field"><span class="flabel">Volgend innamenummer (IN-)</span>
+    <input id="s-nextSeqIn" class="code" data-setting="nextSeqIn" inputmode="numeric" autocomplete="off">
+    <span class="errtxt" id="e-s-nextSeqIn" hidden>Vul een geheel getal van 1 of hoger in.</span>
   </label>
   <button class="card setrow" id="s-scroll-row" data-act="toggleScroll" role="switch">
     <span class="col g2"><span class="mt16">Voorwaarden eerst doorscrollen</span><span class="ms">Akkoord pas mogelijk na lezen tot onderen</span></span>
