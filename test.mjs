@@ -60,6 +60,7 @@ assert.ok(mailBody({ ...full, dept: '' }, m, 'X').includes('van Sanne de Vries, 
 assert.equal(formatWhen(new Date(2026, 9, 8, 8, 42).toISOString(), now), 'Vandaag 08:42');
 assert.equal(formatWhen(new Date(2026, 9, 7, 16, 10).toISOString(), now), 'Gisteren 16:10');
 assert.equal(formatWhen(new Date(2026, 9, 6, 11, 25).toISOString(), now), '6 okt 11:25');
+assert.equal(formatWhen('rommel', now), '');
 
 // prune
 const day = 864e5;

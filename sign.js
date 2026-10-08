@@ -13,8 +13,9 @@ export function createSignature(canvas, onChange) {
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
     ctx.strokeStyle = ctx.fillStyle = '#15171A';
+    const g = ++gen;
     if (dataUrl) {
-      const img = new Image(), g = ++gen;
+      const img = new Image();
       img.onload = () => { if (g === gen) ctx.drawImage(img, 0, 0, w, h); };
       img.src = dataUrl;
     }

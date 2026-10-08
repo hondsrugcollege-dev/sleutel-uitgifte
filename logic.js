@@ -51,6 +51,7 @@ export const recentItems = (s) =>
 
 export function formatWhen(iso, now = new Date()) {
   const d = new Date(iso);
+  if (isNaN(d)) return '';
   const t = `${pad(d.getHours())}:${pad(d.getMinutes())}`;
   const day = (x) => new Date(x.getFullYear(), x.getMonth(), x.getDate()).getTime();
   const diff = Math.round((day(now) - day(d)) / 864e5);

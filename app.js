@@ -250,5 +250,7 @@ recent = pruned.keep;
 saveRecent(recent);
 pruned.drop.forEach((id) => delPdf(id).catch(() => {}));
 
+addEventListener('resize', () => { if (s.step === 'sign') sig.setup(s.sig); });
+
 renderStatic();
 render();
