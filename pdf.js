@@ -1,5 +1,5 @@
 import { TERMS_VERSION, terms } from './config.js';
-import { itemList, copy } from './logic.js';
+import { itemList, copy, hasAlarm } from './logic.js';
 
 // buildPdf moet synchroon blijven (iOS user activation), dus beelden vooraf laden.
 const preload = (src) => Object.assign(new Image(), { src });
@@ -21,7 +21,15 @@ export function buildPdf(s, m, org) {
   doc.setLineWidth(0.5); doc.line(20, 31, 190, 31);
   let y = 42;
   // Nieuwe pagina (met watermerk) als het volgende blok niet meer boven de golf past.
-  const room = (need) => { if (y + need > 262) { doc.addPage(); wave(); y = 25; } };
+  const room = (need) => {
+    if (y + need <= 262) return;
+    doc.addPage(); wave();
+    const fs = doc.getFontSize();
+    doc.setFontSize(9); doc.setTextColor(90);
+    doc.text(`${m.docNo} · pagina ${doc.getNumberOfPages()}`, 190, 15, { align: 'right' });
+    doc.setFontSize(fs); doc.setTextColor(0);
+    y = 28;
+  };
   doc.setFont('helvetica', 'bold'); doc.setFontSize(20); doc.text(c.doc, 20, y);
   doc.setFont('helvetica', 'normal'); doc.setFontSize(9);
   y += 6; doc.setTextColor(90); doc.text(`Sleutels & tags · ${org}`, 20, y); doc.setTextColor(0);
@@ -33,12 +41,12 @@ export function buildPdf(s, m, org) {
   });
 
   y += 6; doc.setFont('helvetica', 'bold'); doc.setFontSize(8);
-  doc.text('MIDDEL', 20, y); doc.text('OMSCHRIJVING', 55, y); y += 2; doc.line(20, y, 190, y); y += 6;
+  doc.text('MIDDEL', 20, y); doc.text('OMSCHRIJVING', 66, y); y += 2; doc.line(20, y, 190, y); y += 6;
   doc.setFontSize(10);
   itemList(s).forEach((it) => {
     room(9);
     doc.setFont('helvetica', 'bold'); doc.text(it.label, 20, y);
-    doc.setFont('helvetica', 'normal'); doc.text(it.detail, 55, y);
+    doc.setFont('helvetica', 'normal'); doc.text(it.detail, 66, y);
     y += 3; doc.setDrawColor(210); doc.setLineWidth(0.2); doc.line(20, y, 190, y); doc.setDrawColor(0); y += 6;
   });
 
@@ -46,7 +54,7 @@ export function buildPdf(s, m, org) {
     room(20);
     y += 6; doc.setFont('helvetica', 'bold'); doc.setFontSize(8); doc.text(`VOORWAARDEN (v${TERMS_VERSION})`, 20, y); y += 5;
     doc.setFont('helvetica', 'normal');
-    terms(org).forEach((t) => {
+    terms(org, hasAlarm(s)).forEach((t) => {
       const lines = doc.splitTextToSize(`${t.n}. ${t.title}. ${t.body}`, 170);
       room(lines.length * 3.6 + 2);
       doc.text(lines, 20, y);

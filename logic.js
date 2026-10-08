@@ -25,6 +25,8 @@ export const isEmail = (v) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(v).trim()
 // Ontvangers voor het klembord: beheer + (optioneel) de ontvanger/inleveraar zelf.
 export const mailTo = (beheer, s) => [beheer, s.mail.trim()].filter(Boolean).join(', ');
 
+export const hasAlarm = (s) => !!(s.tagOn && s.tagAlarm);
+
 export const planFor = (id) => KEY_PLANS.find((p) => p.id === id);
 
 // Namen in vaste volgorde van BUILDINGS, ongeacht de volgorde van aanvinken.
@@ -33,7 +35,7 @@ const buildingNames = (ids) => BUILDINGS.filter((b) => ids.includes(b.id)).map((
 const pad = (n) => String(n).padStart(2, '0');
 
 export function emptyIssue(now = new Date(), mode = 'out') {
-  return { mode, name: '', dept: '', mail: '', keyOn: true, keys: [{ plan: '', type: '' }], tagOn: false, tagNo: '', tagBuildings: [], liftOn: false, liftBuildings: [], termsRead: false, agreed: false, sig: null, touched: false, now };
+  return { mode, name: '', dept: '', mail: '', keyOn: true, keys: [{ plan: '', type: '' }], tagOn: false, tagNo: '', tagBuildings: [], tagAlarm: false, liftOn: false, liftBuildings: [], termsRead: false, agreed: false, sig: null, touched: false, now };
 }
 
 export function itemList(s) {
@@ -41,7 +43,12 @@ export function itemList(s) {
   if (s.keyOn) {
     for (const k of s.keys) out.push({ label: 'Lokalensleutel', detail: `${planFor(k.plan)?.name || '—'} · ${k.type || '—'}` });
   }
-  if (s.tagOn) out.push({ label: 'Tag voordeur', detail: `Tag ${s.tagNo || '—'} · ${buildingNames(s.tagBuildings) || '—'}` });
+  if (s.tagOn) {
+    out.push({
+      label: s.tagAlarm ? 'Tag voordeur + alarm' : 'Tag voordeur',
+      detail: `Tag ${s.tagNo || '—'} · ${buildingNames(s.tagBuildings) || '—'}${s.tagAlarm ? ' · bedient ook het alarm' : ''}`,
+    });
+  }
   if (s.liftOn) out.push({ label: 'Liftsleutel', detail: buildingNames(s.liftBuildings) || '—' });
   return out;
 }
@@ -75,7 +82,7 @@ export function meta(name, now, seq, mode = 'out') {
 
 export function subject(s) {
   const n = s.keyOn ? s.keys.length : 0;
-  const kinds = [n === 1 ? 'lokalensleutel' : n > 1 ? 'lokalensleutels' : '', s.tagOn ? 'tag' : '', s.liftOn ? 'liftsleutel' : ''].filter(Boolean);
+  const kinds = [n === 1 ? 'lokalensleutel' : n > 1 ? 'lokalensleutels' : '', s.tagOn ? (s.tagAlarm ? 'tag met alarm' : 'tag') : '', s.liftOn ? 'liftsleutel' : ''].filter(Boolean);
   const list = kinds.length > 1 ? `${kinds.slice(0, -1).join(', ')} en ${kinds.at(-1)}` : kinds[0] || '';
   return `${copy(s.mode).doc} ${list} – ${s.name}`;
 }
@@ -87,7 +94,7 @@ export const recentItems = (s) =>
   (s.mode === 'in' ? 'Inname · ' : '') +
   [
     ...(s.keyOn ? s.keys.map((k) => `${k.type} ${planFor(k.plan)?.name || ''}`.trim()) : []),
-    ...(s.tagOn ? [`Tag ${s.tagNo}`] : []),
+    ...(s.tagOn ? [`Tag ${s.tagNo}${s.tagAlarm ? ' + alarm' : ''}`] : []),
     ...(s.liftOn ? ['Liftsleutel'] : []),
   ].join(' · ');
 

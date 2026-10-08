@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { stepsFor, copy, mailTo, planFor, emptyIssue, errors, itemList, meta, subject, mailBody, recentItems, formatWhen, prune, initials, settingsErrors } from './logic.js';
+import { stepsFor, copy, mailTo, planFor, hasAlarm, emptyIssue, errors, itemList, meta, subject, mailBody, recentItems, formatWhen, prune, initials, settingsErrors } from './logic.js';
 import { terms, TERMS_VERSION, BUILDINGS, KEY_PLANS, DEFAULTS } from './config.js';
 
 const now = new Date(2026, 9, 8, 9, 5);
@@ -15,6 +15,7 @@ assert.equal(s.tagOn, false);
 assert.equal(s.liftOn, false);
 assert.deepEqual(s.tagBuildings, []);
 assert.deepEqual(s.liftBuildings, []);
+assert.equal(s.tagAlarm, false);
 assert.equal(s.now, now);
 
 // errors
@@ -69,6 +70,14 @@ assert.equal(subject({ ...two, mode: 'in' }), 'Innamebewijs lokalensleutels – 
 assert.equal(recentItems(full), 'GHS De Marke · Tag 0417');
 assert.equal(recentItems({ ...two, mode: 'in' }), 'Inname · GHS De Marke · HS2 De Brink / De Es');
 assert.equal(recentItems(lift), 'Liftsleutel');
+// tag met alarm
+const alarm = { ...full, tagAlarm: true };
+assert.equal(hasAlarm(full), false);
+assert.equal(hasAlarm(alarm), true);
+assert.equal(hasAlarm({ ...alarm, tagOn: false }), false);
+assert.deepEqual(itemList(alarm)[1], { label: 'Tag voordeur + alarm', detail: 'Tag 0417 · De Marke, De Es · bedient ook het alarm' });
+assert.equal(subject(alarm), 'Ontvangstbewijs lokalensleutel en tag met alarm – Sanne de Vries');
+assert.equal(recentItems(alarm), 'GHS De Marke · Tag 0417 + alarm');
 // sleutelplannen uit config.js
 assert.deepEqual(planFor('brink-es').keys, ['GHS', 'HS2', 'HS3']);
 assert.equal(planFor('onbekend'), undefined);
@@ -140,7 +149,12 @@ assert.equal(DEFAULTS.nextSeqIn, 1);
 assert.deepEqual(BUILDINGS.map((b) => b.name), ['De Marke', 'De Brink', 'De Es']);
 assert.deepEqual(KEY_PLANS.map((p) => p.name), ['De Marke', 'De Brink / De Es']);
 assert.ok(!terms('X').some((a) => /alarmtag/i.test(a.body)));
-assert.equal(terms('X')[4].title, 'Alarmsysteem');
+assert.equal(terms('X', true)[4].title, 'Alarmsysteem');
+assert.equal(terms('X', true).length, 8);
+const noAlarm = terms('X', false);
+assert.equal(noAlarm.length, 7);
+assert.ok(!noAlarm.some((a) => a.title === 'Alarmsysteem'));
+assert.deepEqual(noAlarm.map((a) => a.n), ['1', '2', '3', '4', '5', '6', '7']);
 const t = terms('Org X');
 assert.equal(t.length, 8);
 assert.ok(t[0].body.includes('Org X'));

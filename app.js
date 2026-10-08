@@ -1,5 +1,5 @@
 import { BUILDINGS, KEY_PLANS, TERMS_VERSION, terms } from './config.js';
-import { stepsFor, copy, mailTo, isEmail, planFor, emptyIssue, errors, itemList, meta, subject, mailBody, recentItems, formatWhen, prune, initials, settingsErrors } from './logic.js';
+import { stepsFor, copy, mailTo, isEmail, planFor, hasAlarm, emptyIssue, errors, itemList, meta, subject, mailBody, recentItems, formatWhen, prune, initials, settingsErrors } from './logic.js';
 import { loadSettings, saveSettings, loadRecent, saveRecent, putPdf, getPdf, delPdf } from './store.js';
 import { createSignature } from './sign.js';
 import { buildPdf, shareFile } from './pdf.js';
@@ -50,7 +50,11 @@ const checks = (list) => BUILDINGS.map((b) =>
 function renderStatic() {
   $('#tag-buildings').innerHTML = checks('tagBuildings');
   $('#lift-buildings').innerHTML = checks('liftBuildings');
-  const t = terms(settings.org);
+}
+
+// Voorwaarden hangen af van de uitgifte (artikel Alarmsysteem alleen bij een alarmtag).
+function renderTerms() {
+  const t = terms(settings.org, hasAlarm(s));
   $('#terms').innerHTML = t.map((a) =>
     `<div class="art"><span class="artn">${a.n}</span><div class="col g4"><span class="artt">${esc(a.title)}</span><span class="artb">${esc(a.body)}</span></div></div>`).join('');
   $('#pg-terms').innerHTML = t.map((a) => `<span class="pg-term"><b>${a.n}. ${esc(a.title)}.</b> ${esc(a.body)}</span>`).join('');
@@ -122,6 +126,9 @@ function render() {
   showIf('#e-keys', keysBad);
   const tagBad = t && s.tagOn && !s.tagNo.trim();
   flag('#f-tagNo', 'err', tagBad); showIf('#e-tagNo', tagBad);
+  flag('#alarmrow', 'on', s.tagAlarm);
+  flag('#alarm-switch', 'on', s.tagAlarm);
+  $('#alarmrow').setAttribute('aria-checked', s.tagAlarm);
   showIf('#e-tagB', t && s.tagOn && !s.tagBuildings.length);
   showIf('#e-liftB', t && s.liftOn && !s.liftBuildings.length);
 
@@ -182,6 +189,8 @@ function go(step) {
   render();
   $(`[data-screen="${step}"]`).scrollTop = 0;
   if (step === 'sign') sig.setup(s.sig);
+  if (step === 'terms' || step === 'preview') renderTerms();
+  if (step === 'terms' && !s.termsRead) $('#tscroll').scrollTop = 0; // opnieuw lezen vanaf boven
   if (step === 'terms') checkTermsRead(); // korte tekst op groot scherm: niets te scrollen
 }
 
@@ -258,13 +267,22 @@ async function resend(id) {
   }
 }
 
+// Verandert de alarmfunctie, dan veranderen de voorwaarden: opnieuw lezen en akkoord geven.
+function alarmChange(fn) {
+  const before = hasAlarm(s);
+  fn();
+  if (hasAlarm(s) !== before) { s.agreed = false; s.termsRead = false; }
+  render();
+}
+
 const actions = {
   start: () => start('out'), startIn: () => start('in'), next, back,
   cancel: () => { s = { step: 'home', ...emptyIssue(), sent: null }; go('home'); },
   settings: () => { draft = { org: settings.org, email: settings.email, nextSeq: String(settings.nextSeq), nextSeqIn: String(settings.nextSeqIn) }; go('settings'); },
   toggleKey: () => { s.keyOn = !s.keyOn; render(); },
-  toggleTag: () => { s.tagOn = !s.tagOn; render(); },
+  toggleTag: () => alarmChange(() => { s.tagOn = !s.tagOn; }),
   toggleLift: () => { s.liftOn = !s.liftOn; render(); },
+  toggleAlarm: () => alarmChange(() => { s.tagAlarm = !s.tagAlarm; }),
   toggleB: (el) => {
     const list = s[el.dataset.list], id = el.dataset.id;
     s[el.dataset.list] = list.includes(id) ? list.filter((x) => x !== id) : [...list, id];

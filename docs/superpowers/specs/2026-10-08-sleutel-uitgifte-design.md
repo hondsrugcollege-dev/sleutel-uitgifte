@@ -125,3 +125,9 @@ Vervangt "Vaste sleutels per gebouw".
   - **Liftsleutel**: één sleutel, gebouwen aanvinken waar hij werkt (min. één).
 - "Alarmtag" heet overal "tag" (titel, PDF-kop, voorwaarden art. 1, 3, 4, 7). Art. 5 (Alarmsysteem) ongewijzigd. Voorwaardenversie → 2026.2.
 - PDF loopt door op een tweede pagina (met watermerk) als middelen/voorwaarden/handtekening niet op één pagina passen.
+
+## Tag met alarm + paginanummer (2026-10-08, goedgekeurd via voorbeeld)
+- Tag krijgt schakelaar "Ook alarm in-/uitschakelen" (`tagAlarm`, standaard uit).
+- Met alarm: PDF-regel "Tag voordeur + alarm · … · bedient ook het alarm"; onderwerp "tag met alarm"; Recent "Tag 0417 + alarm".
+- Voorwaardenartikel Alarmsysteem staat er alleen in bij een alarmtag (`terms(org, alarm)`, nummering schuift op). Verandert de alarmfunctie na akkoord, dan moeten de voorwaarden opnieuw gelezen en geaccordeerd worden.
+- Vervolgpagina's van de PDF tonen rechtsboven "{docNo} · pagina n". Tabelkolom Omschrijving op x=66 mm.

@@ -62,6 +62,8 @@ h2.big{font-size:32px;line-height:1.1}
 .hero2{background:var(--surface);color:var(--ink);border:1.5px solid var(--line-card);padding:18px 22px}
 .hero2 .hero-s{color:var(--muted)}
 .hero2 .plus{background:#E6F6F8;color:var(--ink)}
+.alarmrow{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 14px;min-height:56px;border:1.5px solid var(--line-card);border-radius:12px;width:100%}
+.alarmrow.on{border-color:var(--ink);background:var(--bg)}
 .kpair{display:grid;grid-template-columns:1.6fr 1fr;gap:8px}
 .chk{display:flex;align-items:center;gap:12px;padding:12px 14px;min-height:48px;border-radius:12px;border:1.5px solid var(--line-card);background:var(--surface);width:100%;font-size:15px;font-weight:500}
 .chk.on{border-color:var(--ink);background:var(--bg)}
@@ -123,8 +125,8 @@ select.err{border-color:var(--err)}
 .ms{font-size:13px;color:var(--muted)}
 .switch{width:50px;height:30px;border-radius:15px;background:var(--line-input);position:relative;transition:background .2s;flex:none}
 .switch::after{content:'';position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:12px;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25);transition:left .2s}
-.mcard.on .switch,.switch.on{background:var(--ok)}
-.mcard.on .switch::after,.switch.on::after{left:23px}
+.mcard.on>.mhead .switch,.switch.on{background:var(--ok)}
+.mcard.on>.mhead .switch::after,.switch.on::after{left:23px}
 .mbody{padding:0 16px 16px;display:flex;flex-direction:column;gap:14px}
 .divider{height:1px;background:var(--divider)}
 
@@ -171,7 +173,7 @@ select.err{border-color:var(--err)}
 .pg-sub{font-size:7.5px;color:var(--muted)}
 .pg-mono7{font-family:var(--mono);font-size:7px}
 .pg-grid{display:grid;grid-template-columns:62px 1fr;gap:3px 8px}
-.pg-row{display:grid;grid-template-columns:62px 1fr;gap:8px;padding:4px 0;border-bottom:.5px solid #DDD}
+.pg-row{display:grid;grid-template-columns:80px 1fr;gap:8px;padding:4px 0;border-bottom:.5px solid #DDD}
 .pg-th{padding:3px 0;border-bottom-color:var(--ink);font-weight:600;font-size:7px;text-transform:uppercase;letter-spacing:.04em}
 .pg-th0{font-weight:600;font-size:7px;text-transform:uppercase;letter-spacing:.04em}
 .pg-mono{font-family:var(--mono);font-size:7.5px}

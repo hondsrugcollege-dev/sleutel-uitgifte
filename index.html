@@ -94,7 +94,7 @@
   <div class="mcard" id="tagcard">
     <button class="mhead" data-act="toggleTag" role="switch">
       <span class="tile"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#15171A" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="7" width="14" height="14" rx="4"/><path d="M12 7V3M9.5 14a3.5 3.5 0 015 0"/></svg></span>
-      <span class="col g2 grow"><span class="mt">Tag voordeur</span><span class="ms">Per gebouw te programmeren</span></span>
+      <span class="col g2 grow"><span class="mt">Tag</span><span class="ms">Voordeur, optioneel met alarm</span></span>
       <span class="switch"></span>
     </button>
     <div class="mbody" id="tagbody" hidden>
@@ -103,6 +103,10 @@
         <input class="code" id="f-tagNo" data-field="tagNo" placeholder="0417" inputmode="numeric" autocomplete="off">
         <span class="errtxt" id="e-tagNo" hidden>Vul het tagnummer in.</span>
       </label>
+      <button class="alarmrow" id="alarmrow" data-act="toggleAlarm" role="switch">
+        <span class="col g2"><span class="flabel">Ook alarm in-/uitschakelen</span><span class="ms">Zet aan voor een alarmtag</span></span>
+        <span class="switch" id="alarm-switch"></span>
+      </button>
       <span class="flabel">Geprogrammeerd voor</span>
       <div class="col g8" id="tag-buildings"></div>
       <span class="errtxt" id="e-tagB" hidden>Kies minimaal één gebouw.</span>

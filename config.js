@@ -25,7 +25,8 @@ export const DEFAULTS = {
   requireScroll: true,
 };
 
-export function terms(o) {
+// `alarm` = er wordt een tag met alarmfunctie uitgegeven; anders vervalt het artikel Alarmsysteem.
+export function terms(o, alarm = true) {
   return [
     ['Eigendom', `De uitgegeven sleutel(s) en tag(s) blijven eigendom van ${o}. Ze zijn persoonsgebonden en uitsluitend bestemd voor gebruik door de ontvanger.`],
     ['Gebruik', 'Het is niet toegestaan sleutels of tags uit te lenen, over te dragen of te (laten) kopiëren. Toegang wordt alleen gebruikt voor werkzaamheden binnen de afgesproken tijden.'],
@@ -35,5 +36,6 @@ export function terms(o) {
     ['Inleveren', 'Bij einde van dienstverband of opdracht, of op eerste verzoek, levert de ontvanger alle middelen direct in. Inname wordt schriftelijk bevestigd.'],
     ['Registratie', 'Het gebruik van tags wordt geregistreerd (tijdstip en toegangspunt). Deze gegevens worden verwerkt conform de AVG en maximaal 12 maanden bewaard.'],
     ['Ondertekening', 'Door te ondertekenen verklaart de ontvanger de middelen in goede staat te hebben ontvangen en akkoord te gaan met deze voorwaarden.'],
-  ].map(([title, body], i) => ({ n: String(i + 1), title, body }));
+  ].filter(([title]) => alarm || title !== 'Alarmsysteem')
+    .map(([title, body], i) => ({ n: String(i + 1), title, body }));
 }
