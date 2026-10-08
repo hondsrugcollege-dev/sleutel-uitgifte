@@ -181,15 +181,14 @@ async function send() {
       return;
     }
     if (how === 'downloaded') toast('Delen niet beschikbaar, PDF gedownload');
-    const buf = await file.arrayBuffer();
-    pdfCache.set(m.docNo, buf);
-    try { await putPdf(m.docNo, buf); } catch { /* PDF is al gedeeld; alleen opnieuw delen vervalt */ }
     recent = [{ id: m.docNo, docNo: m.docNo, fileName: m.fileName, name: s.name, items: recentItems(s), when: new Date().toISOString() }, ...recent];
     saveRecent(recent);
     s.sent = { docNo: m.docNo, dateShort: m.dateShort, timeShort: m.timeShort };
     settings.nextSeq += 1;
     saveSettings(settings);
     go('done');
+    // Pas na teller en navigatie; IndexedDB mag falen of hangen zonder het nummer te raken.
+    file.arrayBuffer().then((buf) => { pdfCache.set(m.docNo, buf); return putPdf(m.docNo, buf); }).catch(() => {});
   } finally {
     busy = false;
   }

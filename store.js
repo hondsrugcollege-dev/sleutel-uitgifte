@@ -9,12 +9,13 @@ export const saveSettings = (s) => write(KS, s);
 export const loadRecent = () => read(KR, []);
 export const saveRecent = (r) => write(KR, r);
 
+let dbp;
 function db() {
-  return new Promise((resolve, reject) => {
+  return dbp ??= new Promise((resolve, reject) => {
     const req = indexedDB.open('su', 1);
     req.onupgradeneeded = () => req.result.createObjectStore('pdfs');
     req.onsuccess = () => resolve(req.result);
-    req.onerror = () => reject(req.error);
+    req.onerror = () => { dbp = undefined; reject(req.error); };
   });
 }
 
@@ -25,6 +26,7 @@ async function tx(mode, fn) {
     const req = fn(t.objectStore('pdfs'));
     t.oncomplete = () => resolve(req.result);
     t.onerror = () => reject(t.error);
+    t.onabort = () => reject(t.error);
   });
 }
 
