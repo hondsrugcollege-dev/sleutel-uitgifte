@@ -62,6 +62,13 @@ h2.big{font-size:32px;line-height:1.1}
 .hero2{background:var(--surface);color:var(--ink);border:1.5px solid var(--line-card);padding:18px 22px}
 .hero2 .hero-s{color:var(--muted)}
 .hero2 .plus{background:#E6F6F8;color:var(--ink)}
+.kpair{display:grid;grid-template-columns:1.6fr 1fr;gap:8px}
+.chk{display:flex;align-items:center;gap:12px;padding:12px 14px;min-height:48px;border-radius:12px;border:1.5px solid var(--line-card);background:var(--surface);width:100%;font-size:15px;font-weight:500}
+.chk.on{border-color:var(--ink);background:var(--bg)}
+.box{width:22px;height:22px;border-radius:6px;border:2px solid var(--ph);display:flex;align-items:center;justify-content:center;flex:none}
+.box svg{opacity:0}
+.chk.on .box{background:var(--ok);border-color:var(--ok)}
+.chk.on .box svg{opacity:1}
 .krow{display:flex;flex-direction:column;gap:8px}
 .krow+.krow{border-top:1px solid var(--divider);padding-top:14px}
 .khead{display:flex;justify-content:space-between;align-items:center;min-height:32px}
@@ -69,6 +76,7 @@ h2.big{font-size:32px;line-height:1.1}
 select{appearance:none;font:inherit;font-size:16px;color:var(--ink);height:50px;width:100%;border:1.5px solid var(--line-input);border-radius:12px;padding:0 40px 0 14px;background:var(--surface) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%235E636B' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") right 14px center no-repeat;outline:none}
 select:focus{border-color:var(--ink)}
 select.empty{color:var(--ph)}
+select:disabled{background-color:var(--bg);color:var(--ph)}
 select.err{border-color:var(--err)}
 .addkey{align-self:flex-start;justify-content:flex-start}
 .hero-t{font-size:19px;font-weight:600}

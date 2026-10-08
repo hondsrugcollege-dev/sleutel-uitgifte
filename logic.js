@@ -1,4 +1,4 @@
-import { BUILDINGS } from './config.js';
+import { BUILDINGS, KEY_PLANS } from './config.js';
 
 export const stepsFor = (mode) =>
   mode === 'in' ? ['recipient', 'items', 'sign', 'preview'] : ['recipient', 'items', 'terms', 'sign', 'preview'];
@@ -25,31 +25,34 @@ export const isEmail = (v) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(v).trim()
 // Ontvangers voor het klembord: beheer + (optioneel) de ontvanger/inleveraar zelf.
 export const mailTo = (beheer, s) => [beheer, s.mail.trim()].filter(Boolean).join(', ');
 
-export const keysFor = (buildingId) => BUILDINGS.find((b) => b.id === buildingId)?.keys || [];
+export const planFor = (id) => KEY_PLANS.find((p) => p.id === id);
+
+// Namen in vaste volgorde van BUILDINGS, ongeacht de volgorde van aanvinken.
+const buildingNames = (ids) => BUILDINGS.filter((b) => ids.includes(b.id)).map((b) => b.name).join(', ');
 
 const pad = (n) => String(n).padStart(2, '0');
 
 export function emptyIssue(now = new Date(), mode = 'out') {
-  return { mode, name: '', dept: '', mail: '', keyOn: true, keys: [{ building: null, keyNo: '', other: false }], tagOn: false, tagNo: '', termsRead: false, agreed: false, sig: null, touched: false, now };
+  return { mode, name: '', dept: '', mail: '', keyOn: true, keys: [{ plan: '', type: '' }], tagOn: false, tagNo: '', tagBuildings: [], liftOn: false, liftBuildings: [], termsRead: false, agreed: false, sig: null, touched: false, now };
 }
 
 export function itemList(s) {
   const out = [];
   if (s.keyOn) {
-    for (const k of s.keys) {
-      const b = BUILDINGS.find((x) => x.id === k.building);
-      const known = keysFor(k.building).find((x) => x.no === k.keyNo);
-      out.push({ label: 'Toegangssleutel', detail: `${b ? b.name : '—'} · ${k.keyNo || '—'}${known ? ` (${known.label})` : ''}` });
-    }
+    for (const k of s.keys) out.push({ label: 'Lokalensleutel', detail: `${planFor(k.plan)?.name || '—'} · ${k.type || '—'}` });
   }
-  if (s.tagOn) out.push({ label: 'Alarmtag', detail: `Tag ${s.tagNo || '—'}` });
+  if (s.tagOn) out.push({ label: 'Tag voordeur', detail: `Tag ${s.tagNo || '—'} · ${buildingNames(s.tagBuildings) || '—'}` });
+  if (s.liftOn) out.push({ label: 'Liftsleutel', detail: buildingNames(s.liftBuildings) || '—' });
   return out;
 }
 
 export function errors(s) {
   return {
     recipient: !s.name.trim() || (!!s.mail.trim() && !isEmail(s.mail)),
-    items: (!s.keyOn && !s.tagOn) || (s.keyOn && (!s.keys.length || s.keys.some((k) => !k.building || !k.keyNo.trim()))) || (s.tagOn && !s.tagNo.trim()),
+    items: (!s.keyOn && !s.tagOn && !s.liftOn)
+      || (s.keyOn && (!s.keys.length || s.keys.some((k) => !k.plan || !k.type)))
+      || (s.tagOn && (!s.tagNo.trim() || !s.tagBuildings.length))
+      || (s.liftOn && !s.liftBuildings.length),
     terms: !s.agreed,
     sign: !s.sig,
     preview: false,
@@ -72,8 +75,9 @@ export function meta(name, now, seq, mode = 'out') {
 
 export function subject(s) {
   const n = s.keyOn ? s.keys.length : 0;
-  const kinds = [n === 1 ? 'toegangssleutel' : n > 1 ? 'toegangssleutels' : '', s.tagOn ? 'alarmtag' : ''].filter(Boolean);
-  return `${copy(s.mode).doc} ${kinds.join(' en ')} – ${s.name}`;
+  const kinds = [n === 1 ? 'lokalensleutel' : n > 1 ? 'lokalensleutels' : '', s.tagOn ? 'tag' : '', s.liftOn ? 'liftsleutel' : ''].filter(Boolean);
+  const list = kinds.length > 1 ? `${kinds.slice(0, -1).join(', ')} en ${kinds.at(-1)}` : kinds[0] || '';
+  return `${copy(s.mode).doc} ${list} – ${s.name}`;
 }
 
 export const mailBody = (s, m, org) =>
@@ -81,7 +85,11 @@ export const mailBody = (s, m, org) =>
 
 export const recentItems = (s) =>
   (s.mode === 'in' ? 'Inname · ' : '') +
-  itemList(s).map((i) => (i.label === 'Alarmtag' ? i.detail : 'Sleutel ' + i.detail.split(' · ')[0])).join(' · ');
+  [
+    ...(s.keyOn ? s.keys.map((k) => `${k.type} ${planFor(k.plan)?.name || ''}`.trim()) : []),
+    ...(s.tagOn ? [`Tag ${s.tagNo}`] : []),
+    ...(s.liftOn ? ['Liftsleutel'] : []),
+  ].join(' · ');
 
 export function formatWhen(iso, now = new Date()) {
   const d = new Date(iso);

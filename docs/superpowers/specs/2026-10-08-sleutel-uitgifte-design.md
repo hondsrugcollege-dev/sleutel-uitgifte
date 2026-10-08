@@ -115,3 +115,13 @@ Bron: map `HC Logo/` (logo's + PowerPoint-template). Afgeleide bestanden in `bra
 - Sleutelrij: gebouw kiezen → sleutel kiezen uit die lijst, of "Ander nummer…" om te typen. Gebouw zonder `keys` → typveld zoals voorheen.
 - Rijstate `{ building, keyNo, other }`. PDF/samenvatting tonen de omschrijving: "Gebouw B – Logistiek · K-2001 (Magazijn)".
 - De sleutels in config zijn voorbeelddata; vervangen door de echte lijst.
+
+## Sleutelplan De Marke / De Brink / De Es (2026-10-08, goedgekeurd via voorbeeld)
+Vervangt "Vaste sleutels per gebouw".
+- `config.js`: `BUILDINGS` = De Marke, De Brink, De Es; `KEY_PLANS` = De Marke (GHS, HS2, HS3) en De Brink / De Es (gedeeld; GHS, HS2, HS3).
+- Middelen:
+  - **Lokalensleutels**: rijen `{ plan, type }`, twee kiezers naast elkaar, geen vrij typen, geen exemplaarnummer.
+  - **Tag voordeur**: tagnummer + gebouwen aanvinken waarvoor geprogrammeerd (min. één).
+  - **Liftsleutel**: één sleutel, gebouwen aanvinken waar hij werkt (min. één).
+- "Alarmtag" heet overal "tag" (titel, PDF-kop, voorwaarden art. 1, 3, 4, 7). Art. 5 (Alarmsysteem) ongewijzigd. Voorwaardenversie → 2026.2.
+- PDF loopt door op een tweede pagina (met watermerk) als middelen/voorwaarden/handtekening niet op één pagina passen.

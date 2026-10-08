@@ -1,5 +1,5 @@
-import { BUILDINGS, TERMS_VERSION, terms } from './config.js';
-import { stepsFor, copy, mailTo, isEmail, keysFor, emptyIssue, errors, itemList, meta, subject, mailBody, recentItems, formatWhen, prune, initials, settingsErrors } from './logic.js';
+import { BUILDINGS, KEY_PLANS, TERMS_VERSION, terms } from './config.js';
+import { stepsFor, copy, mailTo, isEmail, planFor, emptyIssue, errors, itemList, meta, subject, mailBody, recentItems, formatWhen, prune, initials, settingsErrors } from './logic.js';
 import { loadSettings, saveSettings, loadRecent, saveRecent, putPdf, getPdf, delPdf } from './store.js';
 import { createSignature } from './sign.js';
 import { buildPdf, shareFile } from './pdf.js';
@@ -29,25 +29,27 @@ function toast(msg) {
 const seqKey = (mode) => (mode === 'in' ? 'nextSeqIn' : 'nextSeq');
 const curMeta = () => meta(s.name, s.now, settings[seqKey(s.mode)], s.mode);
 
-// Alleen bij toevoegen/verwijderen/start opnieuw opbouwen, zodat de focus bij typen blijft.
-const OTHER = '__other';
-
+// Alleen bij toevoegen/verwijderen/start of planwissel opnieuw opbouwen.
 function renderKeys() {
-  const opts = BUILDINGS.map((b) => `<option value="${esc(b.id)}">${esc(b.name)}</option>`).join('');
+  const plans = KEY_PLANS.map((p) => `<option value="${esc(p.id)}">${esc(p.name)}</option>`).join('');
   $('#keys').innerHTML = s.keys.map((k, i) => {
-    const list = keysFor(k.building);
-    const pick = list.length ? `<select data-key="${i}" data-kfield="keyPick" aria-label="Sleutel ${i + 1}"><option value="">Kies sleutel</option>${
-      list.map((x) => `<option value="${esc(x.no)}">${esc(x.no)} · ${esc(x.label)}</option>`).join('')}<option value="${OTHER}">Ander nummer…</option></select>` : '';
-    const typed = !list.length || k.other ? `<input class="code" data-key="${i}" data-kfield="keyNo" placeholder="Sleutelnummer, bijv. K-1042" autocomplete="off" autocapitalize="characters" aria-label="Sleutelnummer ${i + 1}">` : '';
+    const types = (planFor(k.plan)?.keys || []).map((x) => `<option value="${esc(x)}">${esc(x)}</option>`).join('');
     return `<div class="krow">
     <div class="khead"><span class="flabel">Sleutel ${i + 1}</span>${s.keys.length > 1 ? `<button class="textbtn" data-act="removeKey" data-i="${i}">Verwijderen</button>` : ''}</div>
-    <select data-key="${i}" data-kfield="building" aria-label="Gebouw sleutel ${i + 1}"><option value="">Kies gebouw</option>${opts}</select>
-    ${pick}${typed}
+    <div class="kpair">
+      <select data-key="${i}" data-kfield="plan" aria-label="Sleutelplan sleutel ${i + 1}"><option value="">Sleutelplan</option>${plans}</select>
+      <select data-key="${i}" data-kfield="type" aria-label="Type sleutel ${i + 1}"${k.plan ? '' : ' disabled'}><option value="">Type</option>${types}</select>
+    </div>
   </div>`;
   }).join('');
 }
 
+const checks = (list) => BUILDINGS.map((b) =>
+  `<button class="chk" data-act="toggleB" data-list="${list}" data-id="${esc(b.id)}" role="checkbox"><span class="box"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span>${esc(b.name)}</button>`).join('');
+
 function renderStatic() {
+  $('#tag-buildings').innerHTML = checks('tagBuildings');
+  $('#lift-buildings').innerHTML = checks('liftBuildings');
   const t = terms(settings.org);
   $('#terms').innerHTML = t.map((a) =>
     `<div class="art"><span class="artn">${a.n}</span><div class="col g4"><span class="artt">${esc(a.title)}</span><span class="artb">${esc(a.body)}</span></div></div>`).join('');
@@ -93,19 +95,26 @@ function render() {
   // Middelen
   flag('#keycard', 'on', s.keyOn);
   flag('#tagcard', 'on', s.tagOn);
+  flag('#liftcard', 'on', s.liftOn);
   $('#keycard .mhead').setAttribute('aria-checked', s.keyOn);
   $('#tagcard .mhead').setAttribute('aria-checked', s.tagOn);
+  $('#liftcard .mhead').setAttribute('aria-checked', s.liftOn);
   $('#keybody').hidden = !s.keyOn;
   $('#tagbody').hidden = !s.tagOn;
-  showIf('#e-items', t && !s.keyOn && !s.tagOn);
+  $('#liftbody').hidden = !s.liftOn;
+  showIf('#e-items', t && !s.keyOn && !s.tagOn && !s.liftOn);
+  $$('.chk').forEach((el) => {
+    const on = s[el.dataset.list].includes(el.dataset.id);
+    el.classList.toggle('on', on);
+    el.setAttribute('aria-checked', on);
+  });
   let keysBad = false;
   $$('[data-key]').forEach((el) => {
     const row = s.keys[el.dataset.key], f = el.dataset.kfield;
     if (!row) return;
-    const v = (f === 'keyPick' ? (row.other ? OTHER : row.keyNo) : row[f]) || '';
+    const v = row[f] || '';
     if (el.value !== v) el.value = v;
-    // Bij "Ander nummer…" krijgt alleen het typveld de rode rand.
-    const bad = t && s.keyOn && (f === 'building' ? !row.building : !(f === 'keyPick' && row.other) && !row.keyNo.trim());
+    const bad = t && s.keyOn && !v;
     keysBad ||= bad;
     el.classList.toggle('err', bad);
     if (el.tagName === 'SELECT') el.classList.toggle('empty', !v);
@@ -113,6 +122,8 @@ function render() {
   showIf('#e-keys', keysBad);
   const tagBad = t && s.tagOn && !s.tagNo.trim();
   flag('#f-tagNo', 'err', tagBad); showIf('#e-tagNo', tagBad);
+  showIf('#e-tagB', t && s.tagOn && !s.tagBuildings.length);
+  showIf('#e-liftB', t && s.liftOn && !s.liftBuildings.length);
 
   // Voorwaarden
   const canAgree = s.termsRead || !settings.requireScroll;
@@ -253,7 +264,13 @@ const actions = {
   settings: () => { draft = { org: settings.org, email: settings.email, nextSeq: String(settings.nextSeq), nextSeqIn: String(settings.nextSeqIn) }; go('settings'); },
   toggleKey: () => { s.keyOn = !s.keyOn; render(); },
   toggleTag: () => { s.tagOn = !s.tagOn; render(); },
-  addKey: () => { s.keys.push({ building: '', keyNo: '', other: false }); renderKeys(); render(); },
+  toggleLift: () => { s.liftOn = !s.liftOn; render(); },
+  toggleB: (el) => {
+    const list = s[el.dataset.list], id = el.dataset.id;
+    s[el.dataset.list] = list.includes(id) ? list.filter((x) => x !== id) : [...list, id];
+    render();
+  },
+  addKey: () => { s.keys.push({ plan: '', type: '' }); renderKeys(); render(); },
   removeKey: (el) => { s.keys.splice(Number(el.dataset.i), 1); renderKeys(); render(); },
   agree: () => { if (s.termsRead || !settings.requireScroll) { s.agreed = !s.agreed; render(); } },
   clearSig: () => sig.clear(),
@@ -273,12 +290,11 @@ document.addEventListener('input', (ev) => {
   const kf = ev.target.dataset.kfield;
   if (kf) {
     const row = s.keys[ev.target.dataset.key], v = ev.target.value;
-    if (kf === 'keyNo') { row.keyNo = v; return render(); }
-    if (kf === 'building') Object.assign(row, { building: v, keyNo: '', other: false });
-    if (kf === 'keyPick') Object.assign(row, { other: v === OTHER, keyNo: v === OTHER ? '' : v });
-    renderKeys(); // andere sleutellijst of typveld tonen/verbergen
-    render();
-    if (row.other && kf === 'keyPick') $(`input[data-key="${ev.target.dataset.key}"]`)?.focus();
+    if (kf === 'type') { row.type = v; return render(); }
+    row.plan = v;
+    if (!planFor(v)?.keys.includes(row.type)) row.type = '';
+    renderKeys(); // typelijst hoort bij het gekozen plan
+    return render();
   }
   const k = ev.target.dataset.setting;
   if (k && draft) {

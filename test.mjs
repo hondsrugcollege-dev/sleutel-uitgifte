@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
-import { stepsFor, copy, mailTo, keysFor, emptyIssue, errors, itemList, meta, subject, mailBody, recentItems, formatWhen, prune, initials, settingsErrors } from './logic.js';
-import { terms, TERMS_VERSION, BUILDINGS, DEFAULTS } from './config.js';
+import { stepsFor, copy, mailTo, planFor, emptyIssue, errors, itemList, meta, subject, mailBody, recentItems, formatWhen, prune, initials, settingsErrors } from './logic.js';
+import { terms, TERMS_VERSION, BUILDINGS, KEY_PLANS, DEFAULTS } from './config.js';
 
 const now = new Date(2026, 9, 8, 9, 5);
 const s = emptyIssue(now);
@@ -9,9 +9,12 @@ assert.deepEqual(stepsFor('out'), ['recipient', 'items', 'terms', 'sign', 'previ
 assert.deepEqual(stepsFor('in'), ['recipient', 'items', 'sign', 'preview']);
 assert.equal(s.mode, 'out');
 assert.equal(emptyIssue(now, 'in').mode, 'in');
-assert.deepEqual(s.keys, [{ building: null, keyNo: '', other: false }]);
+assert.deepEqual(s.keys, [{ plan: '', type: '' }]);
 assert.equal(s.keyOn, true);
 assert.equal(s.tagOn, false);
+assert.equal(s.liftOn, false);
+assert.deepEqual(s.tagBuildings, []);
+assert.deepEqual(s.liftBuildings, []);
 assert.equal(s.now, now);
 
 // errors
@@ -24,47 +27,51 @@ assert.equal(errors({ ...s, name: 'Sanne', mail: ' sanne@cleanco.nl ' }).recipie
 assert.equal(mailTo('beheer@hc.nl', s), 'beheer@hc.nl');
 assert.equal(mailTo('beheer@hc.nl', { ...s, mail: ' sanne@cleanco.nl ' }), 'beheer@hc.nl, sanne@cleanco.nl');
 assert.equal(copy('in').mailLabel, 'E-mail inleveraar');
-assert.equal(errors({ ...s, keyOn: false, tagOn: false }).items, true);
-const k = (building, keyNo) => ({ building, keyNo });
-assert.equal(errors({ ...s, keys: [k('B', '')] }).items, true);
-assert.equal(errors({ ...s, keys: [k(null, 'K-1')] }).items, true);
-assert.equal(errors({ ...s, keys: [k('B', 'K-1')] }).items, false);
-assert.equal(errors({ ...s, keys: [k('B', 'K-1'), k('A', ' ')] }).items, true);
-assert.equal(errors({ ...s, keys: [k('B', 'K-1'), k('A', 'K-2')] }).items, false);
+assert.equal(errors({ ...s, keyOn: false }).items, true);
+const k = (plan, type) => ({ plan, type });
+assert.equal(errors({ ...s, keys: [k('marke', '')] }).items, true);
+assert.equal(errors({ ...s, keys: [k('', 'GHS')] }).items, true);
+assert.equal(errors({ ...s, keys: [k('marke', 'GHS')] }).items, false);
+assert.equal(errors({ ...s, keys: [k('marke', 'GHS'), k('brink-es', '')] }).items, true);
 assert.equal(errors({ ...s, keys: [] }).items, true);
-assert.equal(errors({ ...s, keyOn: false, tagOn: true, tagNo: ' ' }).items, true);
-assert.equal(errors({ ...s, keyOn: false, tagOn: true, tagNo: '0417' }).items, false);
+const tagOnly = { ...s, keyOn: false, tagOn: true };
+assert.equal(errors({ ...tagOnly, tagNo: '0417', tagBuildings: [] }).items, true);
+assert.equal(errors({ ...tagOnly, tagNo: ' ', tagBuildings: ['es'] }).items, true);
+assert.equal(errors({ ...tagOnly, tagNo: '0417', tagBuildings: ['es'] }).items, false);
+const liftOnly = { ...s, keyOn: false, liftOn: true };
+assert.equal(errors({ ...liftOnly, liftBuildings: [] }).items, true);
+assert.equal(errors({ ...liftOnly, liftBuildings: ['brink'] }).items, false);
 assert.equal(errors(s).terms, true);
 assert.equal(errors({ ...s, agreed: true }).terms, false);
 assert.equal(errors(s).sign, true);
 assert.equal(errors({ ...s, sig: 'data:image/png;base64,x' }).sign, false);
 assert.equal(errors(s).preview, false);
 
+
 // itemList / subject / recentItems
-const full = { ...s, name: 'Sanne de Vries', dept: 'Schoonmaak', keys: [k('B', 'K-1042')], tagOn: true, tagNo: '0417' };
+const full = { ...s, name: 'Sanne de Vries', dept: 'Schoonmaak', keys: [k('marke', 'GHS')], tagOn: true, tagNo: '0417', tagBuildings: ['es', 'marke'] };
 assert.deepEqual(itemList(full), [
-  { label: 'Toegangssleutel', detail: 'Gebouw B – Logistiek · K-1042' },
-  { label: 'Alarmtag', detail: 'Tag 0417' },
+  { label: 'Lokalensleutel', detail: 'De Marke · GHS' },
+  { label: 'Tag voordeur', detail: 'Tag 0417 · De Marke, De Es' },
 ]);
-assert.deepEqual(itemList({ ...s, keyOn: true }), [{ label: 'Toegangssleutel', detail: '— · —' }]);
-const two = { ...full, keys: [k('B', 'K-1042'), k('P', 'P-0007')], tagOn: false };
+assert.deepEqual(itemList({ ...s }), [{ label: 'Lokalensleutel', detail: '— · —' }]);
+const two = { ...full, keys: [k('marke', 'GHS'), k('brink-es', 'HS2')], tagOn: false };
 assert.deepEqual(itemList(two), [
-  { label: 'Toegangssleutel', detail: 'Gebouw B – Logistiek · K-1042' },
-  { label: 'Toegangssleutel', detail: 'Parkeergarage · P-0007' },
+  { label: 'Lokalensleutel', detail: 'De Marke · GHS' },
+  { label: 'Lokalensleutel', detail: 'De Brink / De Es · HS2' },
 ]);
-assert.equal(subject(two), 'Ontvangstbewijs toegangssleutels – Sanne de Vries');
-assert.equal(subject({ ...two, mode: 'in', tagOn: true }), 'Innamebewijs toegangssleutels en alarmtag – Sanne de Vries');
-assert.equal(recentItems(two), 'Sleutel Gebouw B – Logistiek · Sleutel Parkeergarage');
-assert.equal(recentItems({ ...two, mode: 'in' }), 'Inname · Sleutel Gebouw B – Logistiek · Sleutel Parkeergarage');
-assert.equal(itemList({ ...full, keyOn: false }).length, 1);
-// vaste sleutels per gebouw uit config.js
-assert.deepEqual(keysFor('B').map((x) => x.no), ['K-2001', 'K-2002']);
-assert.deepEqual(keysFor('P'), []);
-assert.deepEqual(keysFor(null), []);
-assert.deepEqual(itemList({ ...s, keys: [k('B', 'K-2001')] }), [{ label: 'Toegangssleutel', detail: 'Gebouw B – Logistiek · K-2001 (Magazijn)' }]);
-assert.equal(subject(full), 'Ontvangstbewijs toegangssleutel en alarmtag – Sanne de Vries');
-assert.equal(subject({ ...full, tagOn: false }), 'Ontvangstbewijs toegangssleutel – Sanne de Vries');
-assert.equal(recentItems(full), 'Sleutel Gebouw B – Logistiek · Tag 0417');
+const lift = { ...two, keyOn: false, liftOn: true, liftBuildings: ['brink', 'es'] };
+assert.deepEqual(itemList(lift), [{ label: 'Liftsleutel', detail: 'De Brink, De Es' }]);
+assert.equal(subject(two), 'Ontvangstbewijs lokalensleutels – Sanne de Vries');
+assert.equal(subject(full), 'Ontvangstbewijs lokalensleutel en tag – Sanne de Vries');
+assert.equal(subject({ ...full, liftOn: true, liftBuildings: ['es'] }), 'Ontvangstbewijs lokalensleutel, tag en liftsleutel – Sanne de Vries');
+assert.equal(subject({ ...two, mode: 'in' }), 'Innamebewijs lokalensleutels – Sanne de Vries');
+assert.equal(recentItems(full), 'GHS De Marke · Tag 0417');
+assert.equal(recentItems({ ...two, mode: 'in' }), 'Inname · GHS De Marke · HS2 De Brink / De Es');
+assert.equal(recentItems(lift), 'Liftsleutel');
+// sleutelplannen uit config.js
+assert.deepEqual(planFor('brink-es').keys, ['GHS', 'HS2', 'HS3']);
+assert.equal(planFor('onbekend'), undefined);
 
 // meta
 const m = meta('José  de Vries', now, 7);
@@ -128,9 +135,12 @@ assert.equal(settingsErrors({ org: 'X', email: 'a@b.nl', nextSeq: '1.5' }).nextS
 assert.equal(settingsErrors({ org: 'X', email: 'a b@c.nl', nextSeq: '1' }).email, true);
 
 // config
-assert.equal(TERMS_VERSION, '2026.1');
+assert.equal(TERMS_VERSION, '2026.2');
 assert.equal(DEFAULTS.nextSeqIn, 1);
-assert.equal(BUILDINGS.length, 4);
+assert.deepEqual(BUILDINGS.map((b) => b.name), ['De Marke', 'De Brink', 'De Es']);
+assert.deepEqual(KEY_PLANS.map((p) => p.name), ['De Marke', 'De Brink / De Es']);
+assert.ok(!terms('X').some((a) => /alarmtag/i.test(a.body)));
+assert.equal(terms('X')[4].title, 'Alarmsysteem');
 const t = terms('Org X');
 assert.equal(t.length, 8);
 assert.ok(t[0].body.includes('Org X'));
