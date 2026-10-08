@@ -66,6 +66,10 @@
   <label class="field"><span class="flabel">Afdeling of bedrijf <span class="opt">(optioneel)</span></span>
     <input data-field="dept" placeholder="Bijv. Schoonmaak, Facilitair" autocomplete="off">
   </label>
+  <label class="field"><span class="flabel"><span data-copy="mailLabel"></span> <span class="opt">(optioneel)</span></span>
+    <input id="f-mail" data-field="mail" type="email" inputmode="email" placeholder="naam@voorbeeld.nl" autocomplete="off" autocapitalize="off" spellcheck="false">
+    <span class="errtxt" id="e-mail" hidden>Vul een geldig mailadres in of laat het leeg.</span>
+  </label>
   <div class="field"><span class="flabel" data-copy="dateLabel"></span>
     <div class="readonly"><span data-text="dateLong"></span><span class="auto">automatisch</span></div>
   </div>
@@ -159,14 +163,14 @@
     </div>
     <div class="pg-wave" aria-hidden="true"></div>
   </div>
-  <p class="note">Na akkoord opent Outlook met deze PDF als bijlage, gericht aan <b data-text="email"></b>.</p>
+  <p class="note">Na akkoord opent Outlook met deze PDF als bijlage, gericht aan <b data-text="mailTo"></b>.</p>
 </section>
 
 <section class="screen done" data-screen="done" hidden>
   <div class="okcircle"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></div>
   <div class="col g10">
     <h2 class="big">Verzonden</h2>
-    <p class="sub16">Het <span data-copy="docLower"></span> voor <span data-text="name"></span> is via Outlook verstuurd naar <span data-text="email"></span>.</p>
+    <p class="sub16">Het <span data-copy="docLower"></span> voor <span data-text="name"></span> is via Outlook verstuurd naar <span data-text="mailTo"></span>.</p>
   </div>
   <div class="card kvcard">
     <div class="kv"><span>Documentnr.</span><span data-text="docNo"></span></div>

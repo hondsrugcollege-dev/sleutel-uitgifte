@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { stepsFor, copy, emptyIssue, errors, itemList, meta, subject, mailBody, recentItems, formatWhen, prune, initials, settingsErrors } from './logic.js';
+import { stepsFor, copy, mailTo, emptyIssue, errors, itemList, meta, subject, mailBody, recentItems, formatWhen, prune, initials, settingsErrors } from './logic.js';
 import { terms, TERMS_VERSION, BUILDINGS, DEFAULTS } from './config.js';
 
 const now = new Date(2026, 9, 8, 9, 5);
@@ -18,6 +18,12 @@ assert.equal(s.now, now);
 assert.equal(errors(s).recipient, true);
 assert.equal(errors({ ...s, name: '  ' }).recipient, true);
 assert.equal(errors({ ...s, name: 'Sanne' }).recipient, false);
+assert.equal(s.mail, '');
+assert.equal(errors({ ...s, name: 'Sanne', mail: 'sanne@' }).recipient, true);
+assert.equal(errors({ ...s, name: 'Sanne', mail: ' sanne@cleanco.nl ' }).recipient, false);
+assert.equal(mailTo('beheer@hc.nl', s), 'beheer@hc.nl');
+assert.equal(mailTo('beheer@hc.nl', { ...s, mail: ' sanne@cleanco.nl ' }), 'beheer@hc.nl, sanne@cleanco.nl');
+assert.equal(copy('in').mailLabel, 'E-mail inleveraar');
 assert.equal(errors({ ...s, keyOn: false, tagOn: false }).items, true);
 const k = (building, keyNo) => ({ building, keyNo });
 assert.equal(errors({ ...s, keys: [k('B', '')] }).items, true);

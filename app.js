@@ -1,5 +1,5 @@
 import { BUILDINGS, TERMS_VERSION, terms } from './config.js';
-import { stepsFor, copy, emptyIssue, errors, itemList, meta, subject, mailBody, recentItems, formatWhen, prune, initials, settingsErrors } from './logic.js';
+import { stepsFor, copy, mailTo, isEmail, emptyIssue, errors, itemList, meta, subject, mailBody, recentItems, formatWhen, prune, initials, settingsErrors } from './logic.js';
 import { loadSettings, saveSettings, loadRecent, saveRecent, putPdf, getPdf, delPdf } from './store.js';
 import { createSignature } from './sign.js';
 import { buildPdf, shareFile } from './pdf.js';
@@ -68,7 +68,7 @@ function render() {
   $$('[data-copy]').forEach((el) => { el.textContent = words[el.dataset.copy]; });
 
   const text = {
-    org: settings.org, initials: initials(settings.org), email: settings.email,
+    org: settings.org, initials: initials(settings.org), email: settings.email, mailTo: mailTo(settings.email, s),
     name: s.name, deptOrDash: s.dept || '—', dateLong: m.dateLong, fileName: m.fileName, termsVersion: TERMS_VERSION,
     dateShort: shown.dateShort, timeShort: shown.timeShort, docNo: shown.docNo,
   };
@@ -77,8 +77,10 @@ function render() {
 
   // Ontvanger
   flag('#f-name', 'filled', !!s.name);
-  flag('#f-name', 'err', t && e.recipient);
-  showIf('#e-name', t && e.recipient);
+  const nameBad = t && !s.name.trim(), mailBad = t && !!s.mail.trim() && !isEmail(s.mail);
+  flag('#f-name', 'err', nameBad); showIf('#e-name', nameBad);
+  flag('#f-mail', 'filled', !!s.mail);
+  flag('#f-mail', 'err', mailBad); showIf('#e-mail', mailBad);
 
   // Middelen
   flag('#keycard', 'on', s.keyOn);
@@ -194,8 +196,9 @@ async function send() {
   try {
     const m = curMeta();
     const file = pdfFile(m);
-    navigator.clipboard?.writeText(settings.email)?.catch(() => {});
-    toast('Adres gekopieerd — plak in Aan');
+    const to = mailTo(settings.email, s);
+    navigator.clipboard?.writeText(to)?.catch(() => {});
+    toast(s.mail.trim() ? 'Adressen gekopieerd — plak in Aan' : 'Adres gekopieerd — plak in Aan');
     let how;
     try {
       how = await shareFile(file, subject(s), mailBody(s, m, settings.org));
@@ -204,7 +207,7 @@ async function send() {
       return;
     }
     if (how === 'downloaded') toast('Delen niet beschikbaar, PDF gedownload');
-    recent = [{ id: m.docNo, docNo: m.docNo, fileName: m.fileName, name: s.name, items: recentItems(s), when: new Date().toISOString(), mode: s.mode }, ...recent];
+    recent = [{ id: m.docNo, docNo: m.docNo, fileName: m.fileName, name: s.name, items: recentItems(s), when: new Date().toISOString(), mode: s.mode, mailTo: to }, ...recent];
     saveRecent(recent);
     s.sent = { docNo: m.docNo, dateShort: m.dateShort, timeShort: m.timeShort };
     settings[seqKey(s.mode)] += 1;
@@ -224,7 +227,7 @@ async function resend(id) {
   if (r && !pdfCache.has(id)) { try { pdfCache.set(id, await getPdf(id)); } catch { /* niet beschikbaar */ } }
   const buf = pdfCache.get(id);
   if (!r || !buf) return toast('PDF niet meer beschikbaar');
-  navigator.clipboard?.writeText(settings.email)?.catch(() => {});
+  navigator.clipboard?.writeText(r.mailTo || settings.email)?.catch(() => {});
   try {
     await shareFile(new File([buf], r.fileName, { type: 'application/pdf' }), `${copy(r.mode).doc} ${r.docNo}`);
   } catch (err) {

@@ -104,3 +104,8 @@ Bron: map `HC Logo/` (logo's + PowerPoint-template). Afgeleide bestanden in `bra
 - Eigen nummerreeks `IN-{jaar}-{0001}` met instelling "Volgend innamenummer" (`nextSeqIn`); UIT-reeks ongewijzigd.
 - Recent: inname herkenbaar aan "Inname · …". Verzonden-scherm heeft "Naar start" naast "Nieuwe uitgifte/inname".
 - Oriëntatie Teams: aanbevolen Power Automate-flow op de beheermailbox die PDF-bijlagen in de SharePoint-map van het kanaal zet; niet in de app gebouwd.
+
+## E-mail ontvanger/inleveraar (2026-10-08)
+- Optioneel veld op stap 1 ("E-mail ontvanger" / "E-mail inleveraar"); ingevuld moet het een geldig adres zijn.
+- Klembord bij verzenden: `beheeradres, ontvangeradres` (`mailTo()` in `logic.js`); ook getoond op PDF-controle en Verzonden, en bewaard bij het recent-item voor opnieuw delen.
+- Mail heeft geen aanhef meer, zodat dezelfde tekst naar beheer én ontvanger kan.

@@ -6,13 +6,13 @@ export const stepsFor = (mode) =>
 // Alle teksten die verschillen tussen uitgifte ('out') en inname ('in').
 const COPY = {
   out: {
-    doc: 'Ontvangstbewijs', prefix: 'UIT', who: 'Wie ontvangt?', nameLabel: 'Naam ontvanger', dateLabel: 'Datum uitgifte',
+    doc: 'Ontvangstbewijs', prefix: 'UIT', who: 'Wie ontvangt?', nameLabel: 'Naam ontvanger', mailLabel: 'E-mail ontvanger', dateLabel: 'Datum uitgifte',
     what: 'Wat wordt uitgegeven?', signText: 'Ik verklaar onderstaande in goede staat te hebben ontvangen en ga akkoord met de voorwaarden.',
     person: 'Ontvanger', dateWord: 'Uitgegeven', verb: 'uitgegeven', signedNote: 'akkoord voorwaarden', pgNote: 'Akkoord voorwaarden ✓',
     itemsCta: 'Naar voorwaarden', again: 'Nieuwe uitgifte',
   },
   in: {
-    doc: 'Innamebewijs', prefix: 'IN', who: 'Wie levert in?', nameLabel: 'Naam inleveraar', dateLabel: 'Datum inname',
+    doc: 'Innamebewijs', prefix: 'IN', who: 'Wie levert in?', nameLabel: 'Naam inleveraar', mailLabel: 'E-mail inleveraar', dateLabel: 'Datum inname',
     what: 'Wat wordt ingeleverd?', signText: 'Ik verklaar onderstaande middelen te hebben ingeleverd.',
     person: 'Ingeleverd door', dateWord: 'Ingenomen', verb: 'ingenomen', signedNote: 'ingeleverd', pgNote: 'Ingeleverd ✓',
     itemsCta: 'Naar handtekening', again: 'Nieuwe inname',
@@ -20,10 +20,15 @@ const COPY = {
 };
 export const copy = (mode) => COPY[mode] || COPY.out;
 
+export const isEmail = (v) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(v).trim());
+
+// Ontvangers voor het klembord: beheer + (optioneel) de ontvanger/inleveraar zelf.
+export const mailTo = (beheer, s) => [beheer, s.mail.trim()].filter(Boolean).join(', ');
+
 const pad = (n) => String(n).padStart(2, '0');
 
 export function emptyIssue(now = new Date(), mode = 'out') {
-  return { mode, name: '', dept: '', keyOn: true, keys: [{ building: null, keyNo: '' }], tagOn: false, tagNo: '', termsRead: false, agreed: false, sig: null, touched: false, now };
+  return { mode, name: '', dept: '', mail: '', keyOn: true, keys: [{ building: null, keyNo: '' }], tagOn: false, tagNo: '', termsRead: false, agreed: false, sig: null, touched: false, now };
 }
 
 export function itemList(s) {
@@ -40,7 +45,7 @@ export function itemList(s) {
 
 export function errors(s) {
   return {
-    recipient: !s.name.trim(),
+    recipient: !s.name.trim() || (!!s.mail.trim() && !isEmail(s.mail)),
     items: (!s.keyOn && !s.tagOn) || (s.keyOn && (!s.keys.length || s.keys.some((k) => !k.building || !k.keyNo.trim()))) || (s.tagOn && !s.tagNo.trim()),
     terms: !s.agreed,
     sign: !s.sig,
@@ -100,7 +105,7 @@ const badSeq = (v) => !/^\d+$/.test(String(v).trim()) || Number(v) < 1;
 export function settingsErrors(d) {
   return {
     org: !String(d.org).trim(),
-    email: !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(d.email).trim()),
+    email: !isEmail(d.email),
     nextSeq: badSeq(d.nextSeq),
     nextSeqIn: badSeq(d.nextSeqIn),
   };
